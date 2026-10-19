@@ -258,7 +258,8 @@ function LightTopCard({ title, source, img, logo, cat }) {
   );
 }
 
-// Formato 2: foto inteira com a caixinha branca do tweet flutuando no meio
+// Formato 2 (padrão do exemplo): foto inteira, caixa branca larga um pouco
+// acima do centro, canto discreto e respiro branco generoso abaixo do texto
 function FloatBoxCard({ title, source, img, logo, cat }) {
   const emoji = categoryEmoji(cat);
   const len = title.length;
@@ -270,9 +271,6 @@ function FloatBoxCard({ title, source, img, logo, cat }) {
         width: W,
         height: H,
         display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
         position: "relative",
         background: "linear-gradient(160deg, #0d1d33 0%, #15283f 60%, #26101a 100%)",
         fontFamily: "Inter",
@@ -290,23 +288,26 @@ function FloatBoxCard({ title, source, img, logo, cat }) {
 
       <div
         style={{
-          width: W - 88,
+          position: "absolute",
+          left: 30,
+          right: 30,
+          top: Math.round(H * 0.37),
           display: "flex",
           flexDirection: "column",
           background: "#ffffff",
-          borderRadius: 18,
-          padding: "34px 38px",
-          boxShadow: "0 24px 70px rgba(0,0,0,0.45)",
+          borderRadius: 14,
+          padding: "32px 36px 72px",
+          boxShadow: "0 18px 55px rgba(0,0,0,0.4)",
         }}
       >
-        <LightHeader logo={logo} avatarSize={84} />
+        <LightHeader logo={logo} avatarSize={86} />
         <div
           style={{
             color: L_TEXT,
             fontSize: size,
             fontWeight: 400,
-            lineHeight: 1.32,
-            marginTop: 22,
+            lineHeight: 1.34,
+            marginTop: 24,
           }}
         >
           {`${emoji} ${title}`}
