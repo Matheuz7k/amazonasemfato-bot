@@ -56,13 +56,7 @@ a { color: inherit; text-decoration: none; }
   width: 42px;
   height: 42px;
   border-radius: 999px;
-  background: linear-gradient(145deg, #e03136, var(--red));
-  color: #fff;
-  font-weight: 800;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  object-fit: cover;
   box-shadow: 0 4px 14px rgba(198, 30, 34, 0.4);
   flex-shrink: 0;
 }

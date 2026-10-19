@@ -9,8 +9,13 @@ const W = 1080;
 const H = 1350;
 const MARGIN = 72;
 const RED = "#c61e22";
-const TWEET_BG = "#15202b";
-const TWEET_MUTED = "#8899a6";
+// Cores reais do X em dark mode ("Lights out")
+const X_TEXT = "#e7e9ea";
+const X_MUTED = "#71767b";
+const X_LINE = "#2f3336";
+
+const MESES = ["jan", "fev", "mar", "abr", "mai", "jun",
+               "jul", "ago", "set", "out", "nov", "dez"];
 
 function loadFont(file) {
   return fs.readFileSync(path.join(process.cwd(), "assets", "fonts", file));
@@ -26,11 +31,21 @@ function manausParts(iso) {
   const d = new Date(new Date(iso).getTime() - 4 * 3600 * 1000);
   const p = (n) => String(n).padStart(2, "0");
   return {
-    date: `${p(d.getUTCDate())}/${p(d.getUTCMonth() + 1)}/${String(d.getUTCFullYear()).slice(2)}`,
+    // Formato do carimbo real do X em pt-BR: "19:04 · 19 de out de 26"
+    xStamp: `${p(d.getUTCHours())}:${p(d.getUTCMinutes())} · ${p(d.getUTCDate())} de ${MESES[d.getUTCMonth()]} de ${String(d.getUTCFullYear()).slice(2)}`,
     fullDate: `${p(d.getUTCDate())}/${p(d.getUTCMonth() + 1)}/${d.getUTCFullYear()}`,
     time: `${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`,
   };
 }
+
+// Ícones oficiais do X (viewBox 24x24): responder, repostar, curtir, views, compartilhar
+const X_ICONS = [
+  "M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z",
+  "M4.5 3.88l4.432 4.14-1.364 1.46L5.5 7.55V16c0 1.1.896 2 2 2H13v2H7.5c-2.209 0-4-1.79-4-4V7.55L1.432 9.48.068 8.02 4.5 3.88zM16.5 6H11V4h5.5c2.209 0 4 1.79 4 4v8.45l2.068-1.93 1.364 1.46-4.432 4.14-4.432-4.14 1.364-1.46 2.068 1.93V8c0-1.1-.896-2-2-2z",
+  "M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z",
+  "M8.75 21V3h2v18h-2zM18 21V8.5h2V21h-2zM4 21l.004-10h2L6 21H4zm9.248 0v-7h2v7h-2z",
+  "M12 2.59l5.7 5.7-1.41 1.42L13 6.41V16h-2V6.41l-3.3 3.3-1.41-1.42L12 2.59zM21 15l-.02 3.51c0 1.38-1.12 2.49-2.5 2.49H5.5C4.11 21 3 19.88 3 18.5V15h2v3.5c0 .28.22.5.5.5h12.98c.28 0 .5-.22.5-.5L19 15h2z",
+];
 
 function Verified() {
   return (
@@ -43,14 +58,14 @@ function Verified() {
   );
 }
 
-function Avatar({ logo }) {
+function Avatar({ logo, size = 104 }) {
   if (logo) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={logo}
-        width={96}
-        height={96}
+        width={size}
+        height={size}
         style={{ borderRadius: 999, objectFit: "cover" }}
       />
     );
@@ -58,12 +73,12 @@ function Avatar({ logo }) {
   return (
     <div
       style={{
-        width: 96,
-        height: 96,
+        width: size,
+        height: size,
         borderRadius: 999,
-        background: RED,
+        background: `linear-gradient(145deg, #e03136, ${RED})`,
         color: "#fff",
-        fontSize: 40,
+        fontSize: size * 0.42,
         fontWeight: 800,
         display: "flex",
         alignItems: "center",
@@ -75,16 +90,25 @@ function Avatar({ logo }) {
   );
 }
 
-function tweetTextSize(title) {
+function tweetTextSize(title, hasImg) {
   const len = title.length;
-  if (len <= 80) return 50;
-  if (len <= 120) return 46;
-  if (len <= 170) return 42;
-  return 38;
+  if (!hasImg) {
+    // Tweet só de texto renderiza grande no X
+    if (len <= 100) return 64;
+    if (len <= 160) return 58;
+    return 50;
+  }
+  if (len <= 80) return 54;
+  if (len <= 120) return 48;
+  if (len <= 170) return 44;
+  return 40;
 }
 
 function TweetCard({ title, source, img, logo, published }) {
-  const { date, time } = manausParts(published);
+  const { xStamp } = manausParts(published);
+  const pad = 44;
+  const cardW = W - 2 * 48; // card largo, pouca borda
+
   return (
     <div
       style={{
@@ -96,18 +120,19 @@ function TweetCard({ title, source, img, logo, published }) {
         justifyContent: "center",
         position: "relative",
         background: "linear-gradient(160deg, #0b0f1a 0%, #141c2e 55%, #26101a 100%)",
-        fontFamily: "Montserrat",
+        fontFamily: "Inter",
       }}
     >
       <div
         style={{
-          width: W - 2 * MARGIN,
+          width: cardW,
           display: "flex",
           flexDirection: "column",
-          background: TWEET_BG,
-          borderRadius: 28,
-          padding: 44,
-          boxShadow: "0 30px 80px rgba(0,0,0,0.55)",
+          background: "#000000",
+          border: `1px solid ${X_LINE}`,
+          borderRadius: 24,
+          padding: pad,
+          boxShadow: "0 30px 80px rgba(0,0,0,0.6)",
         }}
       >
         {/* Cabeçalho do perfil */}
@@ -115,25 +140,25 @@ function TweetCard({ title, source, img, logo, published }) {
           <Avatar logo={logo} />
           <div style={{ display: "flex", flexDirection: "column", marginLeft: 24 }}>
             <div style={{ display: "flex", alignItems: "center" }}>
-              <div style={{ color: "#fff", fontSize: 38, fontWeight: 800 }}>
+              <div style={{ color: X_TEXT, fontSize: 40, fontWeight: 700 }}>
                 Amazonas Em Fato
               </div>
               <Verified />
             </div>
-            <div style={{ color: TWEET_MUTED, fontSize: 30, fontWeight: 500 }}>
+            <div style={{ color: X_MUTED, fontSize: 32, fontWeight: 400 }}>
               @amazonasemfato
             </div>
           </div>
         </div>
 
-        {/* Texto da notícia */}
+        {/* Texto da notícia — peso regular, como no X real */}
         <div
           style={{
-            color: "#f7f9f9",
-            fontSize: tweetTextSize(title),
-            fontWeight: 600,
+            color: X_TEXT,
+            fontSize: tweetTextSize(title, Boolean(img)),
+            fontWeight: 400,
             lineHeight: 1.3,
-            marginTop: 34,
+            marginTop: 32,
           }}
         >
           {title}
@@ -144,35 +169,61 @@ function TweetCard({ title, source, img, logo, published }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={img}
-            width={W - 2 * MARGIN - 88}
-            height={470}
+            width={cardW - 2 * pad}
+            height={540}
             style={{
-              marginTop: 34,
-              borderRadius: 24,
+              marginTop: 32,
+              borderRadius: 16,
               objectFit: "cover",
-              border: "1px solid #38444d",
+              border: `1px solid ${X_LINE}`,
             }}
           />
         )}
 
-        {/* Rodapé do tweet */}
+        {/* Carimbo de hora no formato do X + crédito */}
         <div
           style={{
             display: "flex",
-            color: TWEET_MUTED,
-            fontSize: 28,
-            fontWeight: 500,
-            marginTop: 34,
+            color: X_MUTED,
+            fontSize: 30,
+            fontWeight: 400,
+            marginTop: 30,
           }}
         >
-          {`${time} · ${date} · Fonte: ${source}`}
+          {`${xStamp} · Fonte: ${source}`}
+        </div>
+
+        {/* Divisória + barra de ações do X */}
+        <div
+          style={{
+            height: 1,
+            background: X_LINE,
+            marginTop: 28,
+            display: "flex",
+          }}
+        />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginTop: 26,
+            paddingLeft: 8,
+            paddingRight: 8,
+          }}
+        >
+          {X_ICONS.map((d, i) => (
+            <svg key={i} width="46" height="46" viewBox="0 0 24 24">
+              <path fill={X_MUTED} d={d} />
+            </svg>
+          ))}
         </div>
       </div>
 
       <div
         style={{
           position: "absolute",
-          bottom: 40,
+          bottom: 34,
           color: "#5c6b7a",
           fontSize: 26,
           fontWeight: 700,
@@ -334,8 +385,12 @@ export async function GET(request) {
         "Cache-Control": "public, s-maxage=86400, max-age=3600, stale-while-revalidate=604800",
       },
       fonts: [
+        // Inter ≈ Chirp (fonte real do X) para o card tweet
+        { name: "Inter", data: loadFont("Inter-Regular.ttf"), weight: 400 },
+        { name: "Inter", data: loadFont("Inter-Bold.ttf"), weight: 700 },
+        { name: "Inter", data: loadFont("Inter-ExtraBold.ttf"), weight: 800 },
+        // Montserrat para o card manchete
         { name: "Montserrat", data: loadFont("Montserrat-Medium.ttf"), weight: 500 },
-        { name: "Montserrat", data: loadFont("Montserrat-Bold.ttf"), weight: 600 },
         { name: "Montserrat", data: loadFont("Montserrat-ExtraBold.ttf"), weight: 800 },
       ],
     }

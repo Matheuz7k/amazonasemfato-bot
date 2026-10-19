@@ -15,13 +15,7 @@ export const metadata = {
   title: "Studio — @amazonasemfato",
   description: "Gere posts prontos com as últimas notícias do Amazonas",
   robots: { index: false },
-  icons: {
-    icon:
-      "data:image/svg+xml," +
-      encodeURIComponent(
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="%23c61e22"/><text x="50" y="66" font-size="44" font-weight="bold" font-family="Arial" fill="white" text-anchor="middle">AF</text></svg>'
-      ),
-  },
+  icons: { icon: "/logo.png" },
 };
 
 export const viewport = {
@@ -36,7 +30,8 @@ export default function RootLayout({ children }) {
       <body>
         <header className="topbar">
           <div className="topbar-inner">
-            <div className="brand-badge">AF</div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="brand-badge" src="/logo.png" alt="Amazonas Em Fato" />
             <div>
               <div className="brand-name">Amazonas Em Fato</div>
               <div className="brand-sub">Studio de posts</div>
