@@ -1,7 +1,9 @@
 node_modules/
 .next/
 .vercel/
-card-*-test.png
+card-*.png
+shot-*.png
+first_gerar.txt
 .env*.local
 .vercel
 .env*

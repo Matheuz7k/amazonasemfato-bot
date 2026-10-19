@@ -12,7 +12,8 @@ export const FEEDS = [
     localLinkPatterns: ["/amazonas/", "/manaus/", "/policia/", "/interior/"],
   },
   { name: "Portal Em Tempo", url: "https://emtempo.com.br/feed/", filterLocal: true },
-  { name: "Portal do Holanda", url: "https://www.portaldoholanda.com.br/feed", filterLocal: true },
+  // O RSS do Holanda aponta para /articles/ID (404); a URL real é /secao/slug
+  { name: "Portal do Holanda", url: "https://www.portaldoholanda.com.br/feed", filterLocal: true, resolveLink: "holanda" },
   { name: "A Crítica", url: "https://www.acritica.com/rss", filterLocal: true },
 ];
 
@@ -55,6 +56,17 @@ const UA =
   "(KHTML, like Gecko) Chrome/130.0 Safari/537.36 amazonasemfato-bot";
 
 const MAX_AGE_HOURS = 24;
+
+export function slugify(text) {
+  return String(text)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+const LOGO_URL_RE = /logo|logotipo|placeholder|favicon|avatar|brasao|marca-dagua/i;
 
 function stripHtml(text) {
   return String(text ?? "")
@@ -169,6 +181,7 @@ export async function getNews() {
       if (TITLE_BLOCKLIST.some((t) => lower.includes(t))) continue;
       if (feed.filterLocal && !isLocal(feed, item, title, summary, link)) continue;
       const images = entryImages(item);
+      const categories = entryCategories(item);
       all.push({
         source: feed.name,
         title,
@@ -176,13 +189,42 @@ export async function getNews() {
         link,
         image: images[0] ?? null,
         image2: images[1] ?? null,
-        category: detectCategory(link, entryCategories(item)),
+        category: detectCategory(link, categories),
+        categories,
+        resolveLink: feed.resolveLink ?? null,
         published: published.toISOString(),
       });
     }
   }
 
   all.sort((a, b) => new Date(b.published) - new Date(a.published));
+
+  // Enriquecimento em paralelo: link real do Holanda e miniatura via og:image
+  // para quem não manda imagem no RSS (A Crítica, Holanda). Tudo com timeout e
+  // cache de 1h — a lista nunca fica esperando um portal lento.
+  await Promise.allSettled(
+    all.slice(0, 40).map(async (n) => {
+      if (n.resolveLink === "holanda") {
+        const hit = await resolveHolanda(n.title, n.categories);
+        if (hit) {
+          n.link = hit.url;
+          n.category = detectCategory(hit.url, n.categories);
+          if (hit.meta.image && !LOGO_URL_RE.test(hit.meta.image)) n.image = fullSizeImage(hit.meta.image);
+          if (!n.summary && hit.meta.description) n.summary = hit.meta.description.slice(0, 500);
+        }
+        return;
+      }
+      if (!n.image) {
+        const meta = await fetchOgMeta(n.link);
+        if (meta.image && !LOGO_URL_RE.test(meta.image)) n.image = fullSizeImage(meta.image);
+        if (!n.summary && meta.description) n.summary = meta.description.slice(0, 500);
+      }
+    })
+  );
+  for (const n of all) {
+    delete n.categories;
+    delete n.resolveLink;
+  }
 
   // Remove a mesma história repetida em veículos diferentes
   const unique = [];
@@ -235,6 +277,42 @@ export function buildCaption({ title, summary, source, category }) {
   return parts.join("\n\n");
 }
 
+const HOLANDA_SECTIONS = [
+  "amazonas", "policial", "manaus", "economia", "politica", "mundo", "brasil",
+  "esporte", "famosos-tv", "saude", "educacao", "interior",
+];
+
+// A seção da URL real nem sempre bate com a tag do RSS: tenta a tag primeiro,
+// depois as demais seções em paralelo (tudo cacheado por 1h)
+async function resolveHolanda(title, categories) {
+  const base = "https://www.portaldoholanda.com.br";
+  // O site remove pontuação sem separador ("J&F" → "jf"); testa as duas formas
+  const slugs = [...new Set([
+    slugify(title),
+    slugify(title.replace(/[&'’"“”.,:;!?()]/g, "")),
+  ])];
+  const tagSection = slugify(categories[0] ?? "");
+  const tryUrl = async (section, slug) => {
+    const url = `${base}/${section}/${slug}`;
+    const meta = await fetchOgMeta(url);
+    return meta.ok ? { url, meta } : null;
+  };
+  if (tagSection) {
+    for (const slug of slugs) {
+      const hit = await tryUrl(tagSection, slug);
+      if (hit) return hit;
+    }
+  }
+  const rest = HOLANDA_SECTIONS.filter((s) => s !== tagSection);
+  const results = await Promise.allSettled(
+    rest.flatMap((s) => slugs.map((slug) => tryUrl(s, slug)))
+  );
+  for (const r of results) {
+    if (r.status === "fulfilled" && r.value) return r.value;
+  }
+  return null;
+}
+
 export function categoryEmoji(category) {
   return CATEGORY_EMOJI[category] ?? "🔴";
 }
@@ -254,29 +332,22 @@ export async function fetchOgMeta(link) {
         Accept: "text/html,application/xhtml+xml,*/*;q=0.8",
         "Accept-Language": "pt-BR,pt;q=0.9",
       },
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(8000),
       next: { revalidate: 3600 },
     });
+    if (!resp.ok) return { ok: false, image: null, description: null, video: null };
     const html = await resp.text();
-    // Fotos do corpo da matéria — resgate quando o og:image é o logo do portal
-    const bodyImages = [];
-    for (const m of html.matchAll(/<img[^>]+src=["']([^"']+)["']/gi)) {
-      const u = stripHtml(m[1]);
-      if (!/^https?:/.test(u)) continue;
-      if (/logo|logotipo|icon|favicon|avatar|banner|publicidade|sprite|\.svg/i.test(u)) continue;
-      if (!bodyImages.includes(u)) bodyImages.push(u);
-      if (bodyImages.length >= 3) break;
-    }
     return {
+      ok: true,
       image: matchMeta(html, "og:image(?::url)?"),
-      images: bodyImages,
+      description: matchMeta(html, "og:description") || matchMeta(html, "description"),
       video:
         matchMeta(html, "og:video(?::secure_url|:url)?") ||
         matchMeta(html, "twitter:player:stream") ||
         (/<video[\s>]/i.test(html) ? link : null),
     };
   } catch {
-    return { image: null, images: [], video: null };
+    return { ok: false, image: null, description: null, video: null };
   }
 }
 

@@ -3,10 +3,11 @@
 import calendar
 import hashlib
 import html
+import io
 import json
 import os
 import re
-import time
+import unicodedata
 from datetime import datetime, timedelta, timezone
 
 import feedparser
@@ -50,6 +51,40 @@ def save_posted(posted: dict) -> None:
     os.makedirs(os.path.dirname(config.POSTED_DB), exist_ok=True)
     with open(config.POSTED_DB, "w", encoding="utf-8") as f:
         json.dump(pruned, f, ensure_ascii=False, indent=1, sort_keys=True)
+
+
+_LOGO_URL_RE = re.compile(r"logo|logotipo|placeholder|favicon|avatar|brasao|marca-dagua", re.I)
+
+
+def _slugify(text: str) -> str:
+    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode().lower()
+    return re.sub(r"[^a-z0-9]+", "-", text).strip("-")
+
+
+_HOLANDA_SECTIONS = ["amazonas", "policial", "manaus", "economia", "politica",
+                     "mundo", "brasil", "esporte", "famosos-tv"]
+
+
+def _resolve_holanda_link(entry, title: str) -> str | None:
+    """Reconstrói a URL real (/secao/slug): tag do RSS primeiro, depois as demais seções."""
+    tags = [t.get("term", "") for t in entry.get("tags", []) or []]
+    # O site remove pontuação sem separador ("J&F" → "jf"); testa as duas formas
+    slugs = list(dict.fromkeys([
+        _slugify(title),
+        _slugify(re.sub(r"[&'’\"“”.,:;!?()]", "", title)),
+    ]))
+    sections = [_slugify(tags[0])] if tags else []
+    sections += [s for s in _HOLANDA_SECTIONS if s not in sections]
+    for section in sections:
+        for slug in slugs:
+            url = f"https://www.portaldoholanda.com.br/{section}/{slug}"
+            try:
+                resp = requests.get(url, timeout=12, headers={"User-Agent": config.USER_AGENT})
+                if resp.ok and "og:image" in resp.text:
+                    return url
+            except Exception:
+                continue
+    return None
 
 
 def _blocked(title: str, summary: str) -> bool:
@@ -101,12 +136,15 @@ def fetch_candidates(posted: dict) -> list:
                 feed, entry, title, summary, entry.get("link", "")
             ):
                 continue
+            link = entry.get("link", "")
+            if feed.get("resolve_link") == "holanda":
+                link = _resolve_holanda_link(entry, title) or link
             candidates.append({
                 "id": eid,
                 "source": feed["name"],
                 "title": title,
                 "summary": summary,
-                "link": entry.get("link", ""),
+                "link": link,
                 "published": published,
                 "entry": entry,
             })
@@ -196,12 +234,21 @@ def fetch_article_image(item: dict) -> bytes | None:
             print(f"[aviso] og:image falhou para {item['link']}: {exc}")
 
     for url in urls:
+        if _LOGO_URL_RE.search(url):
+            continue  # logo do portal no lugar de foto
         try:
             resp = requests.get(
                 url, timeout=30, headers={"User-Agent": config.USER_AGENT}
             )
-            if resp.ok and len(resp.content) > 10_000:
-                return resp.content
+            if not resp.ok or len(resp.content) < 10_000:
+                continue
+            # Rejeita letreiro/banner/ícone: só foto de verdade entra no card
+            from PIL import Image
+            w, h = Image.open(io.BytesIO(resp.content)).size
+            ratio = w / max(1, h)
+            if w < 320 or h < 300 or ratio > 2.05 or ratio < 0.45:
+                continue
+            return resp.content
         except Exception:
             continue
     return None

@@ -17,7 +17,9 @@ FEEDS = [
         "local_link_patterns": ["/amazonas/", "/manaus/", "/policia/", "/interior/"],
     },
     {"name": "Portal Em Tempo", "url": "https://emtempo.com.br/feed/", "filter_local": True},
-    {"name": "Portal do Holanda", "url": "https://www.portaldoholanda.com.br/feed", "filter_local": True},
+    # O RSS do Holanda aponta para /articles/ID (404); a URL real é /secao/slug
+    {"name": "Portal do Holanda", "url": "https://www.portaldoholanda.com.br/feed", "filter_local": True,
+     "resolve_link": "holanda"},
     {"name": "A Crítica", "url": "https://www.acritica.com/rss", "filter_local": True},
 ]
 

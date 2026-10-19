@@ -2,8 +2,17 @@
 
 import { useState } from "react";
 
-export function Preview({ cardUrl }) {
+export function Preview({ cardUrl, prefetch = [] }) {
   const [loaded, setLoaded] = useState(false);
+
+  function onLoad() {
+    setLoaded(true);
+    // aquece os outros estilos em segundo plano (cache da CDN + da instância)
+    for (const url of prefetch) {
+      const im = new Image();
+      im.src = url;
+    }
+  }
 
   return (
     <div className="preview-wrap">
@@ -19,7 +28,7 @@ export function Preview({ cardUrl }) {
       <img
         src={cardUrl}
         alt="Card do post"
-        onLoad={() => setLoaded(true)}
+        onLoad={onLoad}
         style={{ opacity: loaded ? 1 : 0, transition: "opacity 0.3s" }}
       />
     </div>

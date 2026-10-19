@@ -38,8 +38,24 @@ async function fetchImageBuffer(url, referer) {
   return buf;
 }
 
-async function normalizeImage(url, referer, { blur = false } = {}) {
+// Cache em memória da instância: trocar de estilo na mesma notícia não baixa
+// nem reprocessa a foto de novo (chave = url + variante)
+const IMAGE_CACHE = new Map();
+const IMAGE_CACHE_MAX = 40;
+
+async function normalizeImage(url, referer, opts = {}) {
   if (!url) return null;
+  const key = `${opts.blur ? "blur:" : ""}${url}`;
+  if (IMAGE_CACHE.has(key)) return IMAGE_CACHE.get(key);
+  const result = await normalizeImageUncached(url, referer, opts);
+  if (IMAGE_CACHE.size >= IMAGE_CACHE_MAX) {
+    IMAGE_CACHE.delete(IMAGE_CACHE.keys().next().value);
+  }
+  IMAGE_CACHE.set(key, result);
+  return result;
+}
+
+async function normalizeImageUncached(url, referer, { blur = false } = {}) {
   // Portais (ex.: D24AM) bloqueiam IPs de datacenter — cadeia de resgate:
   // 1) direta  2) proxy do DuckDuckGo (liberado pelos WAFs)  3) weserv
   const attempts = [
@@ -697,14 +713,18 @@ export async function GET(request) {
   // SÓ imagens declaradas pela própria matéria (og:image + RSS). Garimpar o
   // corpo da página é proibido: sites servem página de erro/relacionadas para
   // bots e a foto sairia de OUTRA notícia — inaceitável em página de notícias.
-  const meta = link ? await fetchOgMeta(link) : { image: null };
+  // Em paralelo: og:image da matéria e a imagem do feed já normalizada
+  const [meta, feedImg] = await Promise.all([
+    link ? fetchOgMeta(link) : Promise.resolve({ image: null }),
+    normalizeImage(sp.get("img"), link),
+  ]);
   const candidates = [
     ...new Set([meta.image, sp.get("img"), sp.get("img2")].filter(Boolean)),
   ];
   let img = null;
   let usedUrl = null;
   for (const u of candidates) {
-    img = await normalizeImage(u, link);
+    img = u === sp.get("img") ? feedImg : await normalizeImage(u, link);
     if (img) {
       usedUrl = u;
       break;

@@ -55,6 +55,7 @@ export default function NewsList({ news }) {
         </p>
       )}
 
+      <div className="grid">
       {visible.map((n) => {
         const params = new URLSearchParams({
           title: n.title,
@@ -74,7 +75,10 @@ export default function NewsList({ news }) {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={n.image} alt="" loading="lazy" />
               ) : (
-                <div className="noimg">📰</div>
+                <div className="noimg">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/logo.png" alt="" />
+                </div>
               )}
               <div>
                 <h2>{n.title}</h2>
@@ -90,6 +94,7 @@ export default function NewsList({ news }) {
           </Link>
         );
       })}
+      </div>
     </>
   );
 }

@@ -148,7 +148,28 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.7rem;
+  background: linear-gradient(160deg, #0d1d33 0%, #15283f 60%, #3a1420 100%);
+}
+
+.item .noimg img {
+  width: 54px;
+  height: 54px;
+  border-radius: 10px;
+  opacity: 0.95;
+}
+
+/* Desktop: aproveita a tela com duas colunas */
+@media (min-width: 900px) {
+  main, .topbar-inner { max-width: 1060px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .item { margin-bottom: 0; align-items: flex-start; }
+  .item img, .item .noimg { width: 120px; height: 120px; }
+  .gerar-main { max-width: 640px; }
+}
+
+.filters, .styles {
+  -webkit-mask-image: linear-gradient(90deg, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, #000 92%, transparent);
 }
 
 .item h2 { font-size: 0.9rem; font-weight: 700; line-height: 1.4; }

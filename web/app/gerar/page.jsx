@@ -29,7 +29,7 @@ export default async function Gerar({ searchParams }) {
     title,
     source,
     style,
-    v: "5", // versão do renderizador — muda a chave de cache da CDN
+    v: "6", // versão do renderizador — muda a chave de cache da CDN
     published: published ?? new Date().toISOString(),
     ...(cat ? { cat } : {}),
     ...(img ? { img } : {}),
@@ -38,13 +38,20 @@ export default async function Gerar({ searchParams }) {
   });
   const cardUrl = `/api/card?${cardParams.toString()}`;
 
+  // Pré-carrega os outros estilos depois do principal: trocar de chip é instantâneo
+  const prefetch = STYLES.filter(([k]) => k !== style).map(([k]) => {
+    const p = new URLSearchParams(cardParams);
+    p.set("style", k);
+    return `/api/card?${p.toString()}`;
+  });
+
   const styleLink = (s) => {
     const p = new URLSearchParams({ ...sp, style: s });
     return `/gerar?${p.toString()}`;
   };
 
   return (
-    <main>
+    <main className="gerar-main">
       <Link className="back" href="/">← voltar para a lista</Link>
 
       <div className="styles">
@@ -60,7 +67,7 @@ export default async function Gerar({ searchParams }) {
         ))}
       </div>
 
-      <Preview key={style} cardUrl={cardUrl} />
+      <Preview key={style} cardUrl={cardUrl} prefetch={prefetch} />
       <Actions cardUrl={cardUrl} caption={caption} />
 
       {meta.video && (
