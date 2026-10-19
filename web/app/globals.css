@@ -1,0 +1,126 @@
+:root {
+  color-scheme: dark;
+  --bg: #0d1117;
+  --panel: #161b22;
+  --border: #30363d;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --red: #c61e22;
+  --green: #238636;
+}
+
+* { box-sizing: border-box; margin: 0; }
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 16px 80px;
+}
+
+a { color: inherit; text-decoration: none; }
+
+h1 { font-size: 1.3rem; }
+
+.sub { color: var(--muted); font-size: 0.85rem; margin: 6px 0 20px; }
+
+.item {
+  display: flex;
+  gap: 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.item img {
+  width: 92px;
+  height: 92px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: #21262d;
+}
+
+.item .noimg {
+  width: 92px;
+  height: 92px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: #21262d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+}
+
+.item h2 { font-size: 0.92rem; line-height: 1.35; }
+
+.item .meta { color: var(--muted); font-size: 0.75rem; margin-top: 6px; }
+
+.item .cat {
+  color: #ff5b5f;
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border: none;
+  color: #fff;
+  background: var(--red);
+  margin-top: 10px;
+}
+
+.btn.secondary { background: #21262d; border: 1px solid var(--border); }
+.btn.ok { background: var(--green); }
+.btn:disabled { opacity: 0.6; cursor: wait; }
+
+.card-preview {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  display: block;
+  background: var(--panel);
+  min-height: 320px;
+}
+
+textarea {
+  width: 100%;
+  min-height: 190px;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 0.85rem;
+  margin-top: 14px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.back { color: var(--muted); font-size: 0.85rem; display: inline-block; margin-bottom: 14px; }
+
+.styles { display: flex; gap: 8px; margin-bottom: 14px; }
+
+.chip {
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.chip.active { background: var(--red); border-color: var(--red); }
