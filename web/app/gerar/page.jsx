@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { buildCaption, fetchOgMeta } from "../../lib/news";
-import { Actions, Preview } from "./ui";
+import CardPanel from "./ui";
 
 const STYLES = [
   ["tweet", "💬 Tweet + mídia"],
@@ -12,7 +12,7 @@ const STYLES = [
 
 export default async function Gerar({ searchParams }) {
   const sp = await searchParams;
-  const { title, summary = "", source, link = "", published, img = "", img2 = "", cat = "", style = "tweet" } = sp;
+  const { title, summary = "", source, link = "", published, img = "", img2 = "", src2 = "", cat = "", style = "tweet" } = sp;
 
   if (!title || !source) {
     return (
@@ -34,6 +34,7 @@ export default async function Gerar({ searchParams }) {
     ...(cat ? { cat } : {}),
     ...(img ? { img } : {}),
     ...(img2 ? { img2 } : {}),
+    ...(src2 ? { src2 } : {}),
     ...(link ? { link } : {}),
   });
   const cardUrl = `/api/card?${cardParams.toString()}`;
@@ -67,8 +68,14 @@ export default async function Gerar({ searchParams }) {
         ))}
       </div>
 
-      <Preview key={style} cardUrl={cardUrl} prefetch={prefetch} />
-      <Actions cardUrl={cardUrl} caption={caption} />
+      <CardPanel
+        key={style}
+        cardUrl={cardUrl}
+        caption={caption}
+        prefetch={prefetch}
+        style={style}
+        src2={src2}
+      />
 
       {meta.video && (
         <a

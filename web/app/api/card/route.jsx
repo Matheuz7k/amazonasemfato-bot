@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
-import { categoryEmoji, fetchOgMeta } from "../../../lib/news";
+import { categoryEmoji, fetchOgMeta, sameImage } from "../../../lib/news";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -42,6 +42,42 @@ async function fetchImageBuffer(url, referer) {
 // nem reprocessa a foto de novo (chave = url + variante)
 const IMAGE_CACHE = new Map();
 const IMAGE_CACHE_MAX = 40;
+
+// Assinatura visual para detectar a MESMA foto em portais diferentes, mesmo
+// com outro recorte/tamanho: histograma de cores 6x6x6 (robusto a recorte) +
+// miniatura em cinza (pega cópias idênticas). Calibrado com pares reais:
+// mesma cena recortada ≈ 0,90 de interseção; fotos distintas 0,30–0,63.
+const SIG_CACHE = new Map();
+async function signature(dataUri) {
+  if (SIG_CACHE.has(dataUri)) return SIG_CACHE.get(dataUri);
+  const buf = Buffer.from(dataUri.split(",")[1], "base64");
+  const base = sharp(buf).resize(48, 48, { fit: "cover", position: "centre" });
+  const [rgb, grey] = await Promise.all([
+    base.clone().removeAlpha().raw().toBuffer(),
+    base.clone().resize(12, 12).greyscale().raw().toBuffer(),
+  ]);
+  const hist = new Float32Array(216);
+  for (let i = 0; i < rgb.length; i += 3) {
+    const r = (rgb[i] * 6) >> 8, g = (rgb[i + 1] * 6) >> 8, b = (rgb[i + 2] * 6) >> 8;
+    hist[r * 36 + g * 6 + b] += 1;
+  }
+  const total = rgb.length / 3;
+  for (let i = 0; i < 216; i++) hist[i] /= total;
+  const sig = { hist, grey };
+  if (SIG_CACHE.size > 60) SIG_CACHE.delete(SIG_CACHE.keys().next().value);
+  SIG_CACHE.set(dataUri, sig);
+  return sig;
+}
+
+async function looksSame(dataA, dataB) {
+  if (!dataA || !dataB) return false;
+  const [a, b] = await Promise.all([signature(dataA), signature(dataB)]);
+  let inter = 0;
+  for (let i = 0; i < 216; i++) inter += Math.min(a.hist[i], b.hist[i]);
+  let diff = 0;
+  for (let i = 0; i < a.grey.length; i++) diff += Math.abs(a.grey[i] - b.grey[i]);
+  return inter > 0.78 || diff / a.grey.length < 14;
+}
 
 async function normalizeImage(url, referer, opts = {}) {
   if (!url) return null;
@@ -731,21 +767,32 @@ export async function GET(request) {
     }
   }
 
-  // Estilo duo: segunda foto distinta; só tem uma → variante desfocada
+  // Estilo duo: 2ª foto DIFERENTE — do outro veículo que cobriu a mesma
+  // notícia (img2) ou do corpo da própria matéria; só existe uma → desfocada
   let imgBottom = null;
+  let duoMode = "none"; // "two-sources" | "body" | "blur"
   if (style === "duo") {
-    for (const u of candidates) {
-      if (u === usedUrl) continue;
-      imgBottom = await normalizeImage(u, link);
-      if (imgBottom) break;
+    const seconds = [
+      ...new Set([sp.get("img2"), ...(meta.bodyImages ?? [])].filter(Boolean)),
+    ].filter((u) => !sameImage(u, usedUrl));
+    for (const u of seconds) {
+      const candidate = await normalizeImage(u, link);
+      // mesma foto de assessoria em dois portais → não serve como 2ª foto
+      if (!candidate || (await looksSame(img, candidate))) continue;
+      imgBottom = candidate;
+      duoMode = u === sp.get("img2") && sp.get("src2") ? "two-sources" : "body";
+      break;
     }
     if (!imgBottom && usedUrl) {
       imgBottom = await normalizeImage(usedUrl, link, { blur: true });
+      duoMode = "blur";
     }
   }
 
   const logo = loadLogo();
-  const props = { title, source, img, logo, cat, published };
+  const sourceLabel =
+    duoMode === "two-sources" ? `${source} / ${sp.get("src2")}` : source;
+  const props = { title, source: sourceLabel, img, logo, cat, published };
 
   const card =
     style === "manchete" ? <HeadlineCard {...props} />
@@ -763,6 +810,9 @@ export async function GET(request) {
       headers: {
         // O card é determinístico pelos parâmetros → cache forte na CDN
         "Cache-Control": "public, s-maxage=86400, max-age=3600, stale-while-revalidate=604800",
+        "X-Duo": duoMode,
+        "X-Has-Photo": img ? "1" : "0",
+        "Access-Control-Expose-Headers": "X-Duo, X-Has-Photo",
       },
       fonts: [
         // Inter ≈ Chirp (fonte real do X) para o card tweet

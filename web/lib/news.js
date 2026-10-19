@@ -68,6 +68,18 @@ export function slugify(text) {
 
 const LOGO_URL_RE = /logo|logotipo|placeholder|favicon|avatar|brasao|marca-dagua/i;
 
+// Mesma foto em tamanhos/CDNs diferentes? Compara pelo nome do arquivo,
+// ignorando sufixos de tamanho do WordPress (-1024x683, -scaled, -e1697...)
+export function sameImage(a, b) {
+  if (!a || !b) return false;
+  const name = (u) =>
+    String(u).split("?")[0].split("/").pop().toLowerCase()
+      .replace(/\.\w{3,4}$/, "")
+      .replace(/-\d{2,4}x\d{2,4}/g, "")
+      .replace(/-scaled|-e\d{8,}/g, "");
+  return a === b || name(a) === name(b);
+}
+
 function stripHtml(text) {
   return String(text ?? "")
     .replace(/<[^>]+>/g, " ")
@@ -244,10 +256,20 @@ export async function getNews() {
     delete n.resolveLink;
   }
 
-  // Remove a mesma história repetida em veículos diferentes
+  // Remove a mesma história repetida em veículos diferentes — mas aproveita a
+  // foto do outro veículo como 2ª imagem (estilo "2 fotos") quando for distinta
   const unique = [];
   for (const c of all) {
-    if (!unique.some((u) => sameStory(u.title, c.title))) unique.push(c);
+    // só entre veículos diferentes: o mesmo portal não repete a própria notícia
+    const dup = unique.find((u) => u.source !== c.source && sameStory(u.title, c.title));
+    if (!dup) {
+      unique.push(c);
+      continue;
+    }
+    if (c.image && !dup.image2 && !sameImage(c.image, dup.image)) {
+      dup.image2 = c.image;
+      dup.source2 = c.source;
+    }
   }
   return unique;
 }
@@ -353,11 +375,13 @@ export async function fetchOgMeta(link) {
       signal: AbortSignal.timeout(8000),
       next: { revalidate: 3600 },
     });
-    if (!resp.ok) return { ok: false, image: null, description: null, video: null };
+    if (!resp.ok) return { ok: false, image: null, description: null, video: null, bodyImages: [] };
     const html = await resp.text();
+    const image = matchMeta(html, "og:image(?::url)?");
     return {
       ok: true,
-      image: matchMeta(html, "og:image(?::url)?"),
+      image,
+      bodyImages: image ? extractBodyImages(html, image) : [],
       description: matchMeta(html, "og:description") || matchMeta(html, "description"),
       video:
         matchMeta(html, "og:video(?::secure_url|:url)?") ||
@@ -365,8 +389,40 @@ export async function fetchOgMeta(link) {
         (/<video[\s>]/i.test(html) ? link : null),
     };
   } catch {
-    return { ok: false, image: null, description: null, video: null };
+    return { ok: false, image: null, description: null, video: null, bodyImages: [] };
   }
+}
+
+/**
+ * Fotos adicionais da PRÓPRIA matéria, para o estilo "2 fotos".
+ * Segurança editorial: só é chamada em página confirmada (200 + og:image) e
+ * olha apenas o bloco do artigo — do <h1> até o primeiro "Leia também" /
+ * relacionadas / comentários / rodapé — para nunca pegar foto de outra notícia.
+ */
+function extractBodyImages(html, ogImage) {
+  const start = html.search(/<h1[\s>]/i);
+  if (start < 0) return [];
+  let block = html.slice(start);
+  const stop = block.search(
+    /leia\s+tamb[eé]m|leia\s+mais|veja\s+tamb[eé]m|relacionad|mais\s+lidas|coment[aá]rios|<footer|class="[^"]*(related|sidebar|widget)/i
+  );
+  if (stop > 0) block = block.slice(0, stop);
+
+  const out = [];
+  for (const m of block.matchAll(/<img\b([^>]*)>/gi)) {
+    const attrs = m[1];
+    const src = (attrs.match(/\ssrc=["']([^"']+)["']/i) || [])[1];
+    if (!src || !/^https?:/.test(src)) continue;
+    if (/logo|logotipo|icon|favicon|avatar|banner|publicidade|sprite|emoji|\.svg|\.gif/i.test(src)) continue;
+    const w = Number((attrs.match(/\swidth=["']?(\d+)/i) || [])[1] || 9999);
+    const h = Number((attrs.match(/\sheight=["']?(\d+)/i) || [])[1] || 9999);
+    if (w < 300 || h < 200) continue; // ícone/miniatura
+    const full = fullSizeImage(stripHtml(src));
+    if (sameImage(full, ogImage) || out.some((u) => sameImage(u, full))) continue;
+    out.push(full);
+    if (out.length >= 3) break;
+  }
+  return out;
 }
 
 export async function fetchOgImage(link) {
