@@ -234,7 +234,12 @@ function matchMeta(html, prop) {
 export async function fetchOgMeta(link) {
   try {
     const resp = await fetch(link, {
-      headers: { "User-Agent": UA },
+      headers: {
+        "User-Agent": UA,
+        Accept: "text/html,application/xhtml+xml,*/*;q=0.8",
+        "Accept-Language": "pt-BR,pt;q=0.9",
+      },
+      signal: AbortSignal.timeout(15000),
       next: { revalidate: 3600 },
     });
     const html = await resp.text();

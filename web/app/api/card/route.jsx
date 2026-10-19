@@ -21,17 +21,43 @@ const UA =
  * e nunca depende de rede no meio do desenho. Falhou? Retorna null e o card
  * sai com o fundo padrão, nunca quebrado.
  */
-async function normalizeImage(url) {
+async function fetchImageBuffer(url, referer) {
+  const resp = await fetch(url, {
+    headers: {
+      "User-Agent": UA,
+      Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+      "Accept-Language": "pt-BR,pt;q=0.9",
+      ...(referer ? { Referer: referer } : {}),
+    },
+    signal: AbortSignal.timeout(15000),
+    next: { revalidate: 3600 },
+  });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  const buf = Buffer.from(await resp.arrayBuffer());
+  if (buf.length < 5000) throw new Error("placeholder"); // pixel de rastreio
+  return buf;
+}
+
+async function normalizeImage(url, referer) {
   if (!url) return null;
+  // Portais (ex.: D24AM) bloqueiam IPs de datacenter — cadeia de resgate:
+  // 1) direta  2) proxy do DuckDuckGo (liberado pelos WAFs)  3) weserv
+  const attempts = [
+    [url, referer],
+    [`https://external-content.duckduckgo.com/iu/?u=${encodeURIComponent(url)}`, null],
+    [`https://images.weserv.nl/?url=${encodeURIComponent(url)}&w=1400&output=jpg&q=88`, null],
+  ];
+  let buf = null;
+  for (const [u, ref] of attempts) {
+    try {
+      buf = await fetchImageBuffer(u, ref);
+      break;
+    } catch {
+      /* tenta a próxima rota */
+    }
+  }
+  if (!buf) return null;
   try {
-    const resp = await fetch(url, {
-      headers: { "User-Agent": UA, Accept: "image/*,*/*;q=0.8" },
-      signal: AbortSignal.timeout(15000),
-      next: { revalidate: 3600 },
-    });
-    if (!resp.ok) return null;
-    const buf = Buffer.from(await resp.arrayBuffer());
-    if (buf.length < 5000) return null; // pixel de rastreio / placeholder
     const out = await sharp(buf, { animated: false })
       .rotate() // respeita orientação EXIF
       .resize({ width: 1400, height: 1400, fit: "inside", withoutEnlargement: true })
@@ -581,7 +607,8 @@ export async function GET(request) {
   // Tudo passa pelo normalizador (WebP/AVIF/EXIF → JPEG inline, à prova de bug).
   const ogUrl = link ? await fetchOgImage(link) : null;
   const img =
-    (await normalizeImage(ogUrl)) ?? (await normalizeImage(sp.get("img")));
+    (await normalizeImage(ogUrl, link)) ??
+    (await normalizeImage(sp.get("img"), link));
 
   const logo = loadLogo();
   const props = { title, source, img, logo, cat, published };
