@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
-import { categoryEmoji, fetchOgImage } from "../../../lib/news";
+import { categoryEmoji, fetchOgMeta } from "../../../lib/news";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -38,7 +38,7 @@ async function fetchImageBuffer(url, referer) {
   return buf;
 }
 
-async function normalizeImage(url, referer) {
+async function normalizeImage(url, referer, { blur = false } = {}) {
   if (!url) return null;
   // Portais (ex.: D24AM) bloqueiam IPs de datacenter — cadeia de resgate:
   // 1) direta  2) proxy do DuckDuckGo (liberado pelos WAFs)  3) weserv
@@ -58,12 +58,28 @@ async function normalizeImage(url, referer) {
   }
   if (!buf) return null;
   try {
-    const out = await sharp(buf, { animated: false })
-      .rotate() // respeita orientação EXIF
+    // Filtro de qualidade: rejeita logo/arte do portal no lugar de foto real
+    // (ex.: Portal do Holanda manda o letreiro do site como imagem padrão)
+    if (/logo|logotipo|placeholder|favicon|avatar|brasao|marca-dagua/i.test(url)) {
+      return null;
+    }
+    const probe = sharp(buf, { animated: false }).rotate();
+    const meta = await probe.metadata();
+    const w = meta.width ?? 0, h = meta.height ?? 0;
+    const ratio = w / Math.max(1, h);
+    if (w < 320 || h < 300 || ratio > 2.05 || ratio < 0.45) return null; // letreiro/banner/ícone
+    const { channels } = await sharp(buf).stats();
+    const avgStd = channels.reduce((s, c) => s + c.stdev, 0) / channels.length;
+    if (avgStd < 8) return null; // imagem chapada = arte gráfica, não foto
+
+    let pipe = probe
       .resize({ width: 1400, height: 1400, fit: "inside", withoutEnlargement: true })
-      .flatten({ background: "#111111" }) // PNG transparente → fundo sólido
-      .jpeg({ quality: 88, mozjpeg: true })
-      .toBuffer();
+      .flatten({ background: "#111111" }); // PNG transparente → fundo sólido
+    if (blur) {
+      // variante para quando a matéria só tem 1 foto (2ª metade do estilo duo)
+      pipe = pipe.blur(16).modulate({ brightness: 0.8, saturation: 0.9 });
+    }
+    const out = await pipe.jpeg({ quality: 88, mozjpeg: true }).toBuffer();
     return `data:image/jpeg;base64,${out.toString("base64")}`;
   } catch {
     return null;
@@ -283,6 +299,77 @@ function FloatBoxCard({ title, source, img, logo, cat }) {
           width={W}
           height={H}
           style={{ position: "absolute", inset: 0, objectFit: "cover" }}
+        />
+      )}
+
+      <div
+        style={{
+          position: "absolute",
+          left: 30,
+          right: 30,
+          top: Math.round(H * 0.37),
+          display: "flex",
+          flexDirection: "column",
+          background: "#ffffff",
+          borderRadius: 14,
+          padding: "32px 36px 72px",
+          boxShadow: "0 18px 55px rgba(0,0,0,0.4)",
+        }}
+      >
+        <LightHeader logo={logo} avatarSize={86} />
+        <div
+          style={{
+            color: L_TEXT,
+            fontSize: size,
+            fontWeight: 400,
+            lineHeight: 1.34,
+            marginTop: 24,
+          }}
+        >
+          {`${emoji} ${title}`}
+        </div>
+      </div>
+
+      <SourceTag source={source} />
+    </div>
+  );
+}
+
+// Variação do exemplo: duas fotos da pauta empilhadas, caixa cobrindo a emenda
+function DuoCard({ title, source, imgTop, imgBottom, logo, cat }) {
+  const emoji = categoryEmoji(cat);
+  const len = title.length;
+  const size = len <= 80 ? 44 : len <= 130 ? 40 : 36;
+  const half = H / 2;
+
+  return (
+    <div
+      style={{
+        width: W,
+        height: H,
+        display: "flex",
+        flexDirection: "column",
+        position: "relative",
+        background: "linear-gradient(160deg, #0d1d33 0%, #15283f 60%, #26101a 100%)",
+        fontFamily: "Inter",
+      }}
+    >
+      {imgTop && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={imgTop}
+          width={W}
+          height={half}
+          style={{ objectFit: "cover" }}
+        />
+      )}
+      {imgBottom && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={imgBottom}
+          width={W}
+          height={half}
+          style={{ objectFit: "cover", marginTop: "auto" }}
         />
       )}
 
@@ -604,12 +691,38 @@ export async function GET(request) {
     title = title.slice(0, 197).replace(/\s+\S*$/, "") + "…";
   }
 
-  // og:image é a foto editorial em alta — preferir; se falhar, cai para a do feed.
-  // Tudo passa pelo normalizador (WebP/AVIF/EXIF → JPEG inline, à prova de bug).
-  const ogUrl = link ? await fetchOgImage(link) : null;
-  const img =
-    (await normalizeImage(ogUrl, link)) ??
-    (await normalizeImage(sp.get("img"), link));
+  // og:image é a foto editorial em alta — preferir; se falhar ou for logo do
+  // portal, tenta as próximas candidatas. Tudo passa pelo normalizador
+  // (WebP/AVIF/EXIF → JPEG inline, filtro anti-logo, à prova de bug).
+  // SÓ imagens declaradas pela própria matéria (og:image + RSS). Garimpar o
+  // corpo da página é proibido: sites servem página de erro/relacionadas para
+  // bots e a foto sairia de OUTRA notícia — inaceitável em página de notícias.
+  const meta = link ? await fetchOgMeta(link) : { image: null };
+  const candidates = [
+    ...new Set([meta.image, sp.get("img"), sp.get("img2")].filter(Boolean)),
+  ];
+  let img = null;
+  let usedUrl = null;
+  for (const u of candidates) {
+    img = await normalizeImage(u, link);
+    if (img) {
+      usedUrl = u;
+      break;
+    }
+  }
+
+  // Estilo duo: segunda foto distinta; só tem uma → variante desfocada
+  let imgBottom = null;
+  if (style === "duo") {
+    for (const u of candidates) {
+      if (u === usedUrl) continue;
+      imgBottom = await normalizeImage(u, link);
+      if (imgBottom) break;
+    }
+    if (!imgBottom && usedUrl) {
+      imgBottom = await normalizeImage(usedUrl, link, { blur: true });
+    }
+  }
 
   const logo = loadLogo();
   const props = { title, source, img, logo, cat, published };
@@ -617,6 +730,7 @@ export async function GET(request) {
   const card =
     style === "manchete" ? <HeadlineCard {...props} />
     : style === "faixa" ? <FloatBoxCard {...props} />
+    : style === "duo" ? <DuoCard {...props} imgTop={img} imgBottom={imgBottom} />
     : style === "dark" ? <TweetCard {...props} />
     : <LightTopCard {...props} />;
 

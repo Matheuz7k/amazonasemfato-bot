@@ -77,17 +77,30 @@ function entryCategories(item) {
   );
 }
 
-function entryImage(item) {
+function entryImages(item) {
+  const urls = [];
   for (const m of asArray(item["media:content"])) {
-    if (m["@_url"]) return m["@_url"];
+    if (m["@_url"]) urls.push(m["@_url"]);
   }
   const enc = item.enclosure;
   if (enc?.["@_url"] && (enc["@_type"] ?? "image").includes("image")) {
-    return enc["@_url"];
+    urls.push(enc["@_url"]);
   }
   const html = `${item["content:encoded"] ?? ""} ${item.description ?? ""}`;
-  const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-  return m ? m[1] : null;
+  for (const m of html.matchAll(/<img[^>]+src=["']([^"']+)["']/gi)) {
+    urls.push(m[1]);
+  }
+  // normaliza, tira thumbnails repetidos/dados inline e deduplica
+  const seen = new Set();
+  const out = [];
+  for (let u of urls) {
+    if (!u || u.startsWith("data:")) continue;
+    u = fullSizeImage(u);
+    if (seen.has(u)) continue;
+    seen.add(u);
+    out.push(u);
+  }
+  return out.slice(0, 3);
 }
 
 function isLocal(feed, item, title, summary, link) {
@@ -155,12 +168,14 @@ export async function getNews() {
       const lower = `${title} ${summary}`.toLowerCase();
       if (TITLE_BLOCKLIST.some((t) => lower.includes(t))) continue;
       if (feed.filterLocal && !isLocal(feed, item, title, summary, link)) continue;
+      const images = entryImages(item);
       all.push({
         source: feed.name,
         title,
         summary,
         link,
-        image: fullSizeImage(entryImage(item)),
+        image: images[0] ?? null,
+        image2: images[1] ?? null,
         category: detectCategory(link, entryCategories(item)),
         published: published.toISOString(),
       });
@@ -243,15 +258,25 @@ export async function fetchOgMeta(link) {
       next: { revalidate: 3600 },
     });
     const html = await resp.text();
+    // Fotos do corpo da matéria — resgate quando o og:image é o logo do portal
+    const bodyImages = [];
+    for (const m of html.matchAll(/<img[^>]+src=["']([^"']+)["']/gi)) {
+      const u = stripHtml(m[1]);
+      if (!/^https?:/.test(u)) continue;
+      if (/logo|logotipo|icon|favicon|avatar|banner|publicidade|sprite|\.svg/i.test(u)) continue;
+      if (!bodyImages.includes(u)) bodyImages.push(u);
+      if (bodyImages.length >= 3) break;
+    }
     return {
       image: matchMeta(html, "og:image(?::url)?"),
+      images: bodyImages,
       video:
         matchMeta(html, "og:video(?::secure_url|:url)?") ||
         matchMeta(html, "twitter:player:stream") ||
         (/<video[\s>]/i.test(html) ? link : null),
     };
   } catch {
-    return { image: null, video: null };
+    return { image: null, images: [], video: null };
   }
 }
 

@@ -64,6 +64,7 @@ export default function NewsList({ news }) {
           published: n.published,
           cat: n.category,
           ...(n.image ? { img: n.image } : {}),
+          ...(n.image2 ? { img2: n.image2 } : {}),
         });
         const isNew = Date.now() - new Date(n.published) < 3600 * 1000;
         return (

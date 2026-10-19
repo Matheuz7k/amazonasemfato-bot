@@ -5,13 +5,14 @@ import { Actions, Preview } from "./ui";
 const STYLES = [
   ["tweet", "💬 Tweet + mídia"],
   ["faixa", "🖼️ Faixa no meio"],
+  ["duo", "🏙️ 2 fotos"],
   ["dark", "🌙 Tweet escuro"],
   ["manchete", "🗞️ Manchete"],
 ];
 
 export default async function Gerar({ searchParams }) {
   const sp = await searchParams;
-  const { title, summary = "", source, link = "", published, img = "", cat = "", style = "tweet" } = sp;
+  const { title, summary = "", source, link = "", published, img = "", img2 = "", cat = "", style = "tweet" } = sp;
 
   if (!title || !source) {
     return (
@@ -28,10 +29,11 @@ export default async function Gerar({ searchParams }) {
     title,
     source,
     style,
-    v: "4", // versão do renderizador — muda a chave de cache da CDN
+    v: "5", // versão do renderizador — muda a chave de cache da CDN
     published: published ?? new Date().toISOString(),
     ...(cat ? { cat } : {}),
     ...(img ? { img } : {}),
+    ...(img2 ? { img2 } : {}),
     ...(link ? { link } : {}),
   });
   const cardUrl = `/api/card?${cardParams.toString()}`;
