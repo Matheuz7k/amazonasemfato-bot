@@ -1,4 +1,7 @@
 node_modules/
 .next/
 .vercel/
-card-tweet-test.png
+card-*-test.png
+.env*.local
+.vercel
+.env*
