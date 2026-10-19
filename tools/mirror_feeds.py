@@ -68,9 +68,12 @@ def main() -> int:
             f.write(datetime.now(timezone.utc).isoformat())
 
         env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}
+        # CREATE_NO_WINDOW: sem isso o git abre um console na tela a cada execução
+        no_window = getattr(subprocess, "CREATE_NO_WINDOW", 0)
         git = lambda *a: subprocess.run(  # noqa: E731
             ["git", *a], cwd=work, check=True, env=env,
             stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True,
+            stdin=subprocess.DEVNULL, creationflags=no_window,
         )
         git("init", "-q")
         git("checkout", "-q", "--orphan", "mirror")
