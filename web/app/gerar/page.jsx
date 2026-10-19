@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { buildCaption } from "../../lib/news";
-import Actions from "./ui";
+import { Actions, Preview } from "./ui";
 
 export default async function Gerar({ searchParams }) {
   const sp = await searchParams;
@@ -15,7 +15,7 @@ export default async function Gerar({ searchParams }) {
     );
   }
 
-  const caption = buildCaption({ title, summary, source });
+  const caption = buildCaption({ title, summary, source, category: cat });
   const cardParams = new URLSearchParams({
     title,
     source,
@@ -35,23 +35,32 @@ export default async function Gerar({ searchParams }) {
   return (
     <main>
       <Link className="back" href="/">← voltar para a lista</Link>
+
       <div className="styles">
         <Link
           className={`chip ${style === "tweet" ? "active" : ""}`}
           href={styleLink("tweet")}
+          replace
         >
-          Estilo tweet
+          💬 Estilo tweet
         </Link>
         <Link
           className={`chip ${style === "manchete" ? "active" : ""}`}
           href={styleLink("manchete")}
+          replace
         >
-          Estilo manchete
+          🗞️ Estilo manchete
         </Link>
       </div>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="card-preview" src={cardUrl} alt="Card do post" />
+
+      <Preview key={style} cardUrl={cardUrl} />
       <Actions cardUrl={cardUrl} caption={caption} />
+
+      {link && (
+        <a className="source-link" href={link} target="_blank" rel="noopener noreferrer">
+          Abrir matéria original em {source} ↗
+        </a>
+      )}
     </main>
   );
 }

@@ -2,7 +2,31 @@
 
 import { useState } from "react";
 
-export default function Actions({ cardUrl, caption }) {
+export function Preview({ cardUrl }) {
+  const [loaded, setLoaded] = useState(false);
+
+  return (
+    <div className="preview-wrap">
+      {!loaded && (
+        <div className="skeleton">
+          <span>🎨 Gerando seu card…</span>
+          <span style={{ fontSize: "0.72rem", fontWeight: 500 }}>
+            buscando a foto em alta da matéria
+          </span>
+        </div>
+      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={cardUrl}
+        alt="Card do post"
+        onLoad={() => setLoaded(true)}
+        style={{ opacity: loaded ? 1 : 0, transition: "opacity 0.3s" }}
+      />
+    </div>
+  );
+}
+
+export function Actions({ cardUrl, caption }) {
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
 
@@ -31,10 +55,10 @@ export default function Actions({ cardUrl, caption }) {
   return (
     <>
       <button className={`btn ${copied ? "ok" : ""}`} onClick={copiar}>
-        {copied ? "✓ Legenda copiada!" : "Copiar legenda"}
+        {copied ? "✓ Legenda copiada!" : "📋 Copiar legenda"}
       </button>
       <button className="btn secondary" onClick={baixar} disabled={downloading}>
-        {downloading ? "Baixando…" : "Baixar imagem"}
+        {downloading ? "Baixando…" : "⬇️ Baixar imagem"}
       </button>
       <textarea readOnly value={caption} />
     </>

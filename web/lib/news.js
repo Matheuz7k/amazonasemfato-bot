@@ -33,9 +33,22 @@ const TITLE_BLOCKLIST = [
   "publieditorial", "conteúdo patrocinado",
 ];
 
-const HASHTAGS =
-  "#Manaus #Amazonas #Notícias #AmazonasEmFato #InteriorDoAmazonas " +
-  "#NotíciasDeManaus #Norte #Brasil";
+// 3–5 hashtags focadas rendem mais alcance que listas longas (prática 2026)
+const HASHTAGS = "#Manaus #Amazonas #Notícias #AmazonasEmFato #InteriorDoAmazonas";
+
+const CATEGORY_EMOJI = {
+  POLICIAL: "🚨",
+  ECONOMIA: "💰",
+  "POLÍTICA": "🏛️",
+  ESPORTE: "⚽",
+  CULTURA: "🎭",
+  "EDUCAÇÃO": "📚",
+  "SAÚDE": "🏥",
+  INTERIOR: "🛶",
+  MANAUS: "🔴",
+  AMAZONAS: "🔴",
+  "ÚLTIMAS NOTÍCIAS": "🔴",
+};
 
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
@@ -192,8 +205,10 @@ export function fullSizeImage(url) {
   return url ? url.replace(/-\d{2,4}x\d{2,4}(\.\w{3,4})$/, "$1") : url;
 }
 
-export function buildCaption({ title, summary, source }) {
-  const parts = [title];
+export function buildCaption({ title, summary, source, category }) {
+  // O gancho precisa caber nos primeiros ~125 caracteres do feed
+  const emoji = CATEGORY_EMOJI[category] ?? "🔴";
+  const parts = [`${emoji} ${title}`];
   if (summary && summary.toLowerCase() !== title.toLowerCase()) {
     let s = summary;
     if (s.length > 280) s = s.slice(0, 277).replace(/\s+\S*$/, "") + "…";

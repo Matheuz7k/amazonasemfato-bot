@@ -57,11 +57,8 @@ MAX_POSTS_PER_RUN = int(
 # Idade máxima da notícia para ser considerada (horas)
 MAX_AGE_HOURS = int(os.environ.get("MAX_AGE_HOURS", "12"))
 
-# Hashtags fixas da legenda
-HASHTAGS = (
-    "#Manaus #Amazonas #Notícias #AmazonasEmFato #InteriorDoAmazonas "
-    "#NotíciasDeManaus #Norte #Brasil"
-)
+# Hashtags fixas da legenda (3–5 focadas rendem mais alcance que listas longas)
+HASHTAGS = "#Manaus #Amazonas #Notícias #AmazonasEmFato #InteriorDoAmazonas"
 
 # Credenciais (definidas como secrets no GitHub Actions)
 IG_ACCESS_TOKEN = os.environ.get("IG_ACCESS_TOKEN", "")

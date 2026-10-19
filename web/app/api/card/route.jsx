@@ -329,6 +329,10 @@ export async function GET(request) {
     {
       width: W,
       height: H,
+      headers: {
+        // O card é determinístico pelos parâmetros → cache forte na CDN
+        "Cache-Control": "public, s-maxage=86400, max-age=3600, stale-while-revalidate=604800",
+      },
       fonts: [
         { name: "Montserrat", data: loadFont("Montserrat-Medium.ttf"), weight: 500 },
         { name: "Montserrat", data: loadFont("Montserrat-Bold.ttf"), weight: 600 },

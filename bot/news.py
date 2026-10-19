@@ -208,7 +208,8 @@ def fetch_article_image(item: dict) -> bytes | None:
 
 
 def build_caption(item: dict) -> str:
-    parts = [item["title"]]
+    # O gancho precisa caber nos primeiros ~125 caracteres do feed
+    parts = [f"🔴 {item['title']}"]
     if item["summary"] and item["summary"].lower() != item["title"].lower():
         summary = item["summary"]
         if len(summary) > 280:
