@@ -1,6 +1,13 @@
 import Link from "next/link";
-import { buildCaption } from "../../lib/news";
+import { buildCaption, fetchOgMeta } from "../../lib/news";
 import { Actions, Preview } from "./ui";
+
+const STYLES = [
+  ["tweet", "💬 Tweet + mídia"],
+  ["faixa", "🖼️ Faixa no meio"],
+  ["dark", "🌙 Tweet escuro"],
+  ["manchete", "🗞️ Manchete"],
+];
 
 export default async function Gerar({ searchParams }) {
   const sp = await searchParams;
@@ -16,6 +23,7 @@ export default async function Gerar({ searchParams }) {
   }
 
   const caption = buildCaption({ title, summary, source, category: cat });
+  const meta = link ? await fetchOgMeta(link) : { video: null };
   const cardParams = new URLSearchParams({
     title,
     source,
@@ -37,24 +45,32 @@ export default async function Gerar({ searchParams }) {
       <Link className="back" href="/">← voltar para a lista</Link>
 
       <div className="styles">
-        <Link
-          className={`chip ${style === "tweet" ? "active" : ""}`}
-          href={styleLink("tweet")}
-          replace
-        >
-          💬 Estilo tweet
-        </Link>
-        <Link
-          className={`chip ${style === "manchete" ? "active" : ""}`}
-          href={styleLink("manchete")}
-          replace
-        >
-          🗞️ Estilo manchete
-        </Link>
+        {STYLES.map(([key, label]) => (
+          <Link
+            key={key}
+            className={`chip ${style === key ? "active" : ""}`}
+            href={styleLink(key)}
+            replace
+          >
+            {label}
+          </Link>
+        ))}
       </div>
 
       <Preview key={style} cardUrl={cardUrl} />
       <Actions cardUrl={cardUrl} caption={caption} />
+
+      {meta.video && (
+        <a
+          className="btn secondary"
+          href={meta.video}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ marginTop: 10 }}
+        >
+          🎥 Esta matéria tem vídeo — abrir na fonte
+        </a>
+      )}
 
       {link && (
         <a className="source-link" href={link} target="_blank" rel="noopener noreferrer">

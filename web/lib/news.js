@@ -220,18 +220,36 @@ export function buildCaption({ title, summary, source, category }) {
   return parts.join("\n\n");
 }
 
-export async function fetchOgImage(link) {
+export function categoryEmoji(category) {
+  return CATEGORY_EMOJI[category] ?? "🔴";
+}
+
+function matchMeta(html, prop) {
+  const m =
+    html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]+content=["']([^"']+)["']`, "i")) ||
+    html.match(new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${prop}["']`, "i"));
+  return m ? stripHtml(m[1]) : null;
+}
+
+export async function fetchOgMeta(link) {
   try {
     const resp = await fetch(link, {
       headers: { "User-Agent": UA },
       next: { revalidate: 3600 },
     });
     const html = await resp.text();
-    const m =
-      html.match(/<meta[^>]+(?:property|name)=["']og:image(?::url)?["'][^>]+content=["']([^"']+)["']/i) ||
-      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']og:image(?::url)?["']/i);
-    return m ? stripHtml(m[1]) : null;
+    return {
+      image: matchMeta(html, "og:image(?::url)?"),
+      video:
+        matchMeta(html, "og:video(?::secure_url|:url)?") ||
+        matchMeta(html, "twitter:player:stream") ||
+        (/<video[\s>]/i.test(html) ? link : null),
+    };
   } catch {
-    return null;
+    return { image: null, video: null };
   }
+}
+
+export async function fetchOgImage(link) {
+  return (await fetchOgMeta(link)).image;
 }

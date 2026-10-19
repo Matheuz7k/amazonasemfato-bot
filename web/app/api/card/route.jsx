@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import fs from "node:fs";
 import path from "node:path";
-import { fetchOgImage } from "../../../lib/news";
+import { categoryEmoji, fetchOgImage } from "../../../lib/news";
 
 export const runtime = "nodejs";
 
@@ -13,6 +13,10 @@ const RED = "#c61e22";
 const X_TEXT = "#e7e9ea";
 const X_MUTED = "#71767b";
 const X_LINE = "#2f3336";
+
+// Cores reais do X em modo claro
+const L_TEXT = "#0f1419";
+const L_MUTED = "#536471";
 
 const MESES = ["jan", "fev", "mar", "abr", "mai", "jun",
                "jul", "ago", "set", "out", "nov", "dez"];
@@ -86,6 +90,168 @@ function Avatar({ logo, size = 104 }) {
       }}
     >
       AF
+    </div>
+  );
+}
+
+function SourceTag({ source }) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        bottom: 22,
+        left: 22,
+        display: "flex",
+        background: "rgba(0,0,0,0.55)",
+        color: "#fff",
+        fontSize: 24,
+        fontWeight: 400,
+        padding: "8px 18px",
+        borderRadius: 999,
+      }}
+    >
+      {`Fonte: ${source}`}
+    </div>
+  );
+}
+
+function LightHeader({ logo, avatarSize = 88 }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center" }}>
+      <Avatar logo={logo} size={avatarSize} />
+      <div style={{ display: "flex", flexDirection: "column", marginLeft: 20, flexGrow: 1 }}>
+        <div style={{ color: L_TEXT, fontSize: 36, fontWeight: 700 }}>
+          Amazonas Em Fato
+        </div>
+        <div style={{ color: L_MUTED, fontSize: 30, fontWeight: 400 }}>
+          @amazonasemfato
+        </div>
+      </div>
+      <div style={{ color: L_MUTED, fontSize: 40, fontWeight: 700, marginBottom: 20 }}>
+        ···
+      </div>
+    </div>
+  );
+}
+
+// Formato 1: tweet claro no topo, mídia preenchendo o resto até a borda
+function LightTopCard({ title, source, img, logo, cat }) {
+  const emoji = categoryEmoji(cat);
+  const len = title.length;
+  const size = len <= 80 ? 48 : len <= 120 ? 44 : len <= 170 ? 40 : 36;
+
+  return (
+    <div
+      style={{
+        width: W,
+        height: H,
+        display: "flex",
+        flexDirection: "column",
+        background: "#ffffff",
+        fontFamily: "Inter",
+      }}
+    >
+      <div style={{ display: "flex", flexDirection: "column", padding: "40px 44px 36px" }}>
+        <LightHeader logo={logo} />
+        <div
+          style={{
+            color: L_TEXT,
+            fontSize: size,
+            fontWeight: 400,
+            lineHeight: 1.32,
+            marginTop: 26,
+          }}
+        >
+          {`${emoji} ${title}`}
+        </div>
+      </div>
+
+      <div style={{ display: "flex", flexGrow: 1, overflow: "hidden", position: "relative" }}>
+        {img ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={img}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        ) : (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "linear-gradient(160deg, #0d1d33 0%, #15283f 60%, #26101a 100%)",
+            }}
+          >
+            {logo && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logo} width={300} height={300} style={{ borderRadius: 32, opacity: 0.9 }} />
+            )}
+          </div>
+        )}
+        <SourceTag source={source} />
+      </div>
+    </div>
+  );
+}
+
+// Formato 2: foto inteira com a caixinha branca do tweet flutuando no meio
+function FloatBoxCard({ title, source, img, logo, cat }) {
+  const emoji = categoryEmoji(cat);
+  const len = title.length;
+  const size = len <= 80 ? 44 : len <= 130 ? 40 : 36;
+
+  return (
+    <div
+      style={{
+        width: W,
+        height: H,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+        background: "linear-gradient(160deg, #0d1d33 0%, #15283f 60%, #26101a 100%)",
+        fontFamily: "Inter",
+      }}
+    >
+      {img && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={img}
+          width={W}
+          height={H}
+          style={{ position: "absolute", inset: 0, objectFit: "cover" }}
+        />
+      )}
+
+      <div
+        style={{
+          width: W - 88,
+          display: "flex",
+          flexDirection: "column",
+          background: "#ffffff",
+          borderRadius: 18,
+          padding: "34px 38px",
+          boxShadow: "0 24px 70px rgba(0,0,0,0.45)",
+        }}
+      >
+        <LightHeader logo={logo} avatarSize={84} />
+        <div
+          style={{
+            color: L_TEXT,
+            fontSize: size,
+            fontWeight: 400,
+            lineHeight: 1.32,
+            marginTop: 22,
+          }}
+        >
+          {`${emoji} ${title}`}
+        </div>
+      </div>
+
+      <SourceTag source={source} />
     </div>
   );
 }
@@ -375,11 +541,18 @@ export async function GET(request) {
   const logo = loadLogo();
   const props = { title, source, img, logo, cat, published };
 
+  const card =
+    style === "manchete" ? <HeadlineCard {...props} />
+    : style === "faixa" ? <FloatBoxCard {...props} />
+    : style === "dark" ? <TweetCard {...props} />
+    : <LightTopCard {...props} />;
+
   return new ImageResponse(
-    style === "manchete" ? <HeadlineCard {...props} /> : <TweetCard {...props} />,
+    card,
     {
       width: W,
       height: H,
+      emoji: "twemoji",
       headers: {
         // O card é determinístico pelos parâmetros → cache forte na CDN
         "Cache-Control": "public, s-maxage=86400, max-age=3600, stale-while-revalidate=604800",

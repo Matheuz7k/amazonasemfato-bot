@@ -194,7 +194,15 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 14px;
 }
 
-.styles { display: flex; gap: 8px; margin-bottom: 14px; }
+.styles {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.styles::-webkit-scrollbar { display: none; }
 
 .preview-wrap {
   position: relative;
