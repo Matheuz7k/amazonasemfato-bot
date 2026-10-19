@@ -11,9 +11,10 @@ const DUO_NOTES = {
     "ℹ️ Só existe uma foto desta notícia — a metade de baixo usa a mesma foto desfocada. Experimente outro estilo.",
 };
 
-export default function CardPanel({ cardUrl, caption, prefetch = [], style, src2 }) {
+export default function CardPanel({ cardUrl, caption: baseCaption, prefetch = [], style, src2 }) {
   const [blobUrl, setBlobUrl] = useState(null);
   const [note, setNote] = useState(null);
+  const [caption, setCaption] = useState(baseCaption);
   const [error, setError] = useState(false);
   const [copied, setCopied] = useState(false);
   const blobRef = useRef(null);
@@ -23,6 +24,7 @@ export default function CardPanel({ cardUrl, caption, prefetch = [], style, src2
     setBlobUrl(null);
     setNote(null);
     setError(false);
+    setCaption(baseCaption);
     fetch(cardUrl)
       .then(async (resp) => {
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -33,6 +35,14 @@ export default function CardPanel({ cardUrl, caption, prefetch = [], style, src2
         if (style === "duo") {
           const mode = resp.headers.get("x-duo");
           if (DUO_NOTES[mode]) setNote(DUO_NOTES[mode](src2));
+          // foto do acervo com licença de atribuição: crédito vai na legenda
+          const credit = resp.headers.get("x-stock-credit");
+          if (credit) {
+            const text = decodeURIComponent(credit);
+            if (!/cc0|public domain|domínio público/i.test(text)) {
+              setCaption(`${baseCaption}\n\n📷 Foto ilustrativa: ${text}`);
+            }
+          }
         } else if (resp.headers.get("x-has-photo") === "0") {
           setNote("ℹ️ Esta matéria não tem foto disponível — o card saiu com o fundo da marca.");
         }
@@ -46,7 +56,7 @@ export default function CardPanel({ cardUrl, caption, prefetch = [], style, src2
     return () => {
       cancelled = true;
     };
-  }, [cardUrl, style, src2, prefetch]);
+  }, [cardUrl, style, src2, prefetch, baseCaption]);
 
   async function copiar() {
     await navigator.clipboard.writeText(caption);

@@ -116,7 +116,7 @@ def render_card(title: str, source: str, image_bytes: bytes | None,
     # Rodapé: fonte + data/hora de Manaus
     meta_font = _font("Montserrat-Medium.ttf", 30)
     local_time = published.astimezone(MANAUS_TZ)
-    meta = f"Fonte: {source}  •  {local_time.strftime('%d/%m/%Y %H:%M')}  •  @amazonasemfato"
+    meta = f"{local_time.strftime('%d/%m/%Y %H:%M')}  •  @amazonasemfato"
     meta_y = H - MARGIN - 34
     draw.text((MARGIN, meta_y), meta, font=meta_font, fill=GRAY)
 

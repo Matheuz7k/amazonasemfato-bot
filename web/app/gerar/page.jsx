@@ -29,7 +29,7 @@ export default async function Gerar({ searchParams }) {
     title,
     source,
     style,
-    v: "7", // versão do renderizador — muda a chave de cache da CDN
+    v: "8", // versão do renderizador — muda a chave de cache da CDN
     published: published ?? new Date().toISOString(),
     ...(cat ? { cat } : {}),
     ...(img ? { img } : {}),

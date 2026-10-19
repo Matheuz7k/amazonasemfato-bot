@@ -362,8 +362,7 @@ function LightTopCard({ title, source, img, logo, cat }) {
             )}
           </div>
         )}
-        <SourceTag source={source} />
-      </div>
+        </div>
     </div>
   );
 }
@@ -424,7 +423,6 @@ function FloatBoxCard({ title, source, img, logo, cat }) {
         </div>
       </div>
 
-      <SourceTag source={source} />
     </div>
   );
 }
@@ -495,7 +493,6 @@ function DuoCard({ title, source, imgTop, imgBottom, logo, cat }) {
         </div>
       </div>
 
-      <SourceTag source={source} />
     </div>
   );
 }
@@ -600,7 +597,7 @@ function TweetCard({ title, source, img, logo, published }) {
             marginTop: 30,
           }}
         >
-          {`${xStamp} · Fonte: ${source}`}
+          {xStamp}
         </div>
 
         {/* Divisória + barra de ações do X */}
@@ -764,7 +761,7 @@ function HeadlineCard({ title, source, img, logo, cat, published }) {
             marginTop: 36,
           }}
         >
-          {`Fonte: ${source}  •  ${fullDate} ${time}  •  @amazonasemfato`}
+          {`${fullDate} ${time}  •  @amazonasemfato`}
         </div>
       </div>
     </div>
@@ -847,10 +844,10 @@ export async function GET(request) {
   }
 
   const logo = loadLogo();
-  let sourceLabel = source;
-  if (duoMode === "two-sources") sourceLabel = `${source} / ${sp.get("src2")}`;
-  if (duoMode === "stock") sourceLabel = `${source} · Foto 2 ilustrativa: ${stockCredit}`;
-  const props = { title, source: sourceLabel, img, logo, cat, published };
+  // Sem crédito impresso no card (pedido da página): a fonte vai na legenda.
+  // Foto do acervo com licença que exige atribuição → crédito segue no header
+  // e a tela acrescenta à legenda.
+  const props = { title, source, img, logo, cat, published };
 
   const card =
     style === "manchete" ? <HeadlineCard {...props} />
@@ -870,7 +867,8 @@ export async function GET(request) {
         "Cache-Control": "public, s-maxage=86400, max-age=3600, stale-while-revalidate=604800",
         "X-Duo": duoMode,
         "X-Has-Photo": img ? "1" : "0",
-        "Access-Control-Expose-Headers": "X-Duo, X-Has-Photo",
+        "X-Stock-Credit": duoMode === "stock" ? encodeURIComponent(stockCredit) : "",
+        "Access-Control-Expose-Headers": "X-Duo, X-Has-Photo, X-Stock-Credit",
       },
       fonts: [
         // Inter ≈ Chirp (fonte real do X) para o card tweet
