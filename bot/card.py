@@ -92,18 +92,26 @@ def render_card(title: str, source: str, image_bytes: bytes | None,
 
     draw = ImageDraw.Draw(bg)
 
-    # Chip da marca no topo
-    brand_font = _font("Montserrat-ExtraBold.ttf", 34)
-    brand_text = "AMAZONAS EM FATO"
-    pad_x, pad_y = 28, 16
-    tw = draw.textlength(brand_text, font=brand_font)
-    chip_h = 34 + 2 * pad_y
-    draw.rounded_rectangle(
-        (MARGIN, MARGIN, MARGIN + tw + 2 * pad_x, MARGIN + chip_h),
-        radius=14, fill=RED,
-    )
-    draw.text((MARGIN + pad_x, MARGIN + pad_y - 2), brand_text,
-              font=brand_font, fill=WHITE)
+    # Marca no topo: usa assets/logo.png se existir, senão o chip de texto
+    if os.path.exists(config.LOGO_PATH):
+        logo = Image.open(config.LOGO_PATH).convert("RGBA")
+        logo_h = 110
+        logo = logo.resize(
+            (round(logo.width * logo_h / logo.height), logo_h), Image.LANCZOS
+        )
+        bg.paste(logo, (MARGIN, MARGIN), logo)
+    else:
+        brand_font = _font("Montserrat-ExtraBold.ttf", 34)
+        brand_text = "AMAZONAS EM FATO"
+        pad_x, pad_y = 28, 16
+        tw = draw.textlength(brand_text, font=brand_font)
+        chip_h = 34 + 2 * pad_y
+        draw.rounded_rectangle(
+            (MARGIN, MARGIN, MARGIN + tw + 2 * pad_x, MARGIN + chip_h),
+            radius=14, fill=RED,
+        )
+        draw.text((MARGIN + pad_x, MARGIN + pad_y - 2), brand_text,
+                  font=brand_font, fill=WHITE)
 
     # Rodapé: fonte + data/hora de Manaus
     meta_font = _font("Montserrat-Medium.ttf", 30)

@@ -43,8 +43,16 @@ TITLE_BLOCKLIST = [
     "conteúdo patrocinado",
 ]
 
-# Quantos posts por execução (a API permite 100/dia, mas menos é melhor p/ engajamento)
-MAX_POSTS_PER_RUN = int(os.environ.get("MAX_POSTS_PER_RUN", "1"))
+# Modo de operação:
+#   draft   → gera card + legenda e coloca na fila (docs/) para você postar à mão
+#   publish → publica sozinho no Instagram via API (requer secrets IG_*)
+MODE = os.environ.get("MODE", "draft")
+
+# Quantos posts por execução. Em draft gera mais opções para você escolher;
+# em publish (API permite 100/dia) menos é melhor para o algoritmo.
+MAX_POSTS_PER_RUN = int(
+    os.environ.get("MAX_POSTS_PER_RUN") or ("3" if MODE == "draft" else "1")
+)
 
 # Idade máxima da notícia para ser considerada (horas)
 MAX_AGE_HOURS = int(os.environ.get("MAX_AGE_HOURS", "12"))
@@ -67,6 +75,12 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POSTED_DB = os.path.join(ROOT, "data", "posted.json")
 POSTS_DIR = os.path.join(ROOT, "posts")
 FONTS_DIR = os.path.join(ROOT, "assets", "fonts")
+LOGO_PATH = os.path.join(ROOT, "assets", "logo.png")
+DOCS_DIR = os.path.join(ROOT, "docs")
+QUEUE_JSON = os.path.join(DOCS_DIR, "fila.json")
+
+# Quantos itens ficam visíveis na página da fila
+QUEUE_PAGE_LIMIT = 40
 
 # Dias que uma entrada fica no histórico de deduplicação
 DEDUP_RETENTION_DAYS = 30
