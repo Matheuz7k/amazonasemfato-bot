@@ -1,0 +1,339 @@
+{
+ "MANAUS": [
+  {
+   "file": "stock/manaus-1.jpg",
+   "author": "Ana Claudia Jatahy - MTUR",
+   "license": "CC0",
+   "source": "https://commons.wikimedia.org/wiki/File:Journalist_Phelippe_Daou_Bridge.jpg",
+   "title": "File:Journalist Phelippe Daou Bridge.jpg"
+  },
+  {
+   "file": "stock/manaus-2.jpg",
+   "author": "Jalambert",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:Amazon_River_Rio_Negro_convergence.JPG",
+   "title": "File:Amazon River Rio Negro convergence.JPG"
+  },
+  {
+   "file": "stock/manaus-3.jpg",
+   "author": "MTur Destinos",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:AnaClaudiaJatahy_Econtro_das_%C3%81guas_Manaus_AM_(26279055397).jpg",
+   "title": "File:AnaClaudiaJatahy Econtro das Águas Manaus AM (26279055397).jpg"
+  },
+  {
+   "file": "stock/manaus-8.jpg",
+   "author": "Ana Claudia Jatahy - MTUR",
+   "license": "CC0",
+   "source": "https://commons.wikimedia.org/wiki/File:Pal%C3%A1cio_da_Justi%C3%A7a_(Manaus).jpg",
+   "title": "File:Palácio da Justiça (Manaus).jpg"
+  },
+  {
+   "file": "stock/manaus-9.jpg",
+   "author": "Salles Neto",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:Igreja_de_S%C3%A3o_Sebasti%C3%A3o,_Manaus.jpg",
+   "title": "File:Igreja de São Sebastião, Manaus.jpg"
+  }
+ ],
+ "ESPORTE": [
+  {
+   "file": "stock/esporte-1.jpg",
+   "author": "José Zamith",
+   "license": "CC BY 3.0 br",
+   "source": "https://commons.wikimedia.org/wiki/File:Amazon_Arena,_Manaus,_Brazil.jpg",
+   "title": "File:Amazon Arena, Manaus, Brazil.jpg"
+  },
+  {
+   "file": "stock/esporte-2.jpg",
+   "author": "Brazilian Government - Portal da Copa - Atribuição",
+   "license": "CC BY 3.0 br",
+   "source": "https://commons.wikimedia.org/wiki/File:Amazonia_Arena.jpg",
+   "title": "File:Amazonia Arena.jpg"
+  },
+  {
+   "file": "stock/esporte-3.jpg",
+   "author": "James Martins",
+   "license": "CC BY 3.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Arena_Amaz%C3%B4nia_2005_(cropped).jpg",
+   "title": "File:Arena Amazônia 2005 (cropped).jpg"
+  }
+ ],
+ "CULTURA": [
+  {
+   "file": "stock/cultura-1.jpg",
+   "author": "Ridiculopathy",
+   "license": "CC0",
+   "source": "https://commons.wikimedia.org/wiki/File:Amazon_Theatre,_Teatro_Amazonas._Manaus,_Brazil._01.jpg",
+   "title": "File:Amazon Theatre, Teatro Amazonas. Manaus, Brazil. 01.jpg"
+  },
+  {
+   "file": "stock/cultura-2.jpg",
+   "author": "MTur Destinos",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:AnaClaudiaJatahy_Teatro_Amazonas_Manaus_AM_(41107560852).jpg",
+   "title": "File:AnaClaudiaJatahy Teatro Amazonas Manaus AM (41107560852).jpg"
+  }
+ ],
+ "INTERIOR": [
+  {
+   "file": "stock/interior-1.jpg",
+   "author": "MTur Destinos",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:AdalmirChixaro_Rio_Uiacurap%C3%A1_Parintins_AM_(26655513547).jpg",
+   "title": "File:AdalmirChixaro Rio Uiacurapá Parintins AM (26655513547).jpg"
+  },
+  {
+   "file": "stock/interior-2.jpg",
+   "author": "MTur Destinos",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:AldamirChixaro_Rio_Uiacurap%C3%A1_Parintins_AM_(27654587468).jpg",
+   "title": "File:AldamirChixaro Rio Uiacurapá Parintins AM (27654587468).jpg"
+  },
+  {
+   "file": "stock/interior-4.jpg",
+   "author": "Marcel dos Reis",
+   "license": "CC BY-SA 4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:AeroportoParintins.jpg",
+   "title": "File:AeroportoParintins.jpg"
+  },
+  {
+   "file": "stock/interior-5.jpg",
+   "author": "Guilherme Braga Gomes",
+   "license": "CC BY-SA 4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Casinha_Alagada.jpg",
+   "title": "File:Casinha Alagada.jpg"
+  },
+  {
+   "file": "stock/interior-6.jpg",
+   "author": "Jefferson Rober",
+   "license": "CC BY-SA 3.0",
+   "source": "https://commons.wikimedia.org/wiki/File:C%C3%A9u,_mata_e_rio.JPG",
+   "title": "File:Céu, mata e rio.JPG"
+  }
+ ],
+ "POLÍTICA": [
+  {
+   "file": "stock/poltica-1.jpg",
+   "author": "Assembleia Legislativa do Amazonas",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:Assembleia_Legislativa_do_Estado_do_Amazonas_(ALEAM).jpg",
+   "title": "File:Assembleia Legislativa do Estado do Amazonas (ALEAM).jpg"
+  },
+  {
+   "file": "stock/poltica-2.jpg",
+   "author": "Assembleia Legislativa do Amazonas",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:Cidade_de_Manaus_2021.jpg",
+   "title": "File:Cidade de Manaus 2021.jpg"
+  },
+  {
+   "file": "stock/poltica-3.jpg",
+   "author": "JLPizzol",
+   "license": "CC BY-SA 4.0",
+   "source": "https://commons.wikimedia.org/wiki/File:Centro_Hist%C3%B3rico-Pal%C3%A1cio_Rio_Branco.JPG",
+   "title": "File:Centro Histórico-Palácio Rio Branco.JPG"
+  }
+ ],
+ "ECONOMIA": [
+  {
+   "file": "stock/economia-2.jpg",
+   "author": "Arne Müseler",
+   "license": "CC BY-SA 3.0 de",
+   "source": "https://commons.wikimedia.org/wiki/File:Manaus_amazonas.jpg",
+   "title": "File:Manaus amazonas.jpg"
+  },
+  {
+   "file": "stock/economia-3.jpg",
+   "author": "Arne Müseler",
+   "license": "CC BY-SA 3.0 de",
+   "source": "https://commons.wikimedia.org/wiki/File:Manaus_harbor.jpg",
+   "title": "File:Manaus harbor.jpg"
+  }
+ ],
+ "AMAZONAS": [
+  {
+   "file": "stock/manaus-1.jpg",
+   "author": "Ana Claudia Jatahy - MTUR",
+   "license": "CC0",
+   "source": "https://commons.wikimedia.org/wiki/File:Journalist_Phelippe_Daou_Bridge.jpg",
+   "title": "File:Journalist Phelippe Daou Bridge.jpg"
+  },
+  {
+   "file": "stock/manaus-2.jpg",
+   "author": "Jalambert",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:Amazon_River_Rio_Negro_convergence.JPG",
+   "title": "File:Amazon River Rio Negro convergence.JPG"
+  },
+  {
+   "file": "stock/manaus-3.jpg",
+   "author": "MTur Destinos",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:AnaClaudiaJatahy_Econtro_das_%C3%81guas_Manaus_AM_(26279055397).jpg",
+   "title": "File:AnaClaudiaJatahy Econtro das Águas Manaus AM (26279055397).jpg"
+  },
+  {
+   "file": "stock/manaus-8.jpg",
+   "author": "Ana Claudia Jatahy - MTUR",
+   "license": "CC0",
+   "source": "https://commons.wikimedia.org/wiki/File:Pal%C3%A1cio_da_Justi%C3%A7a_(Manaus).jpg",
+   "title": "File:Palácio da Justiça (Manaus).jpg"
+  },
+  {
+   "file": "stock/manaus-9.jpg",
+   "author": "Salles Neto",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:Igreja_de_S%C3%A3o_Sebasti%C3%A3o,_Manaus.jpg",
+   "title": "File:Igreja de São Sebastião, Manaus.jpg"
+  }
+ ],
+ "ÚLTIMAS NOTÍCIAS": [
+  {
+   "file": "stock/manaus-1.jpg",
+   "author": "Ana Claudia Jatahy - MTUR",
+   "license": "CC0",
+   "source": "https://commons.wikimedia.org/wiki/File:Journalist_Phelippe_Daou_Bridge.jpg",
+   "title": "File:Journalist Phelippe Daou Bridge.jpg"
+  },
+  {
+   "file": "stock/manaus-2.jpg",
+   "author": "Jalambert",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:Amazon_River_Rio_Negro_convergence.JPG",
+   "title": "File:Amazon River Rio Negro convergence.JPG"
+  },
+  {
+   "file": "stock/manaus-3.jpg",
+   "author": "MTur Destinos",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:AnaClaudiaJatahy_Econtro_das_%C3%81guas_Manaus_AM_(26279055397).jpg",
+   "title": "File:AnaClaudiaJatahy Econtro das Águas Manaus AM (26279055397).jpg"
+  },
+  {
+   "file": "stock/manaus-8.jpg",
+   "author": "Ana Claudia Jatahy - MTUR",
+   "license": "CC0",
+   "source": "https://commons.wikimedia.org/wiki/File:Pal%C3%A1cio_da_Justi%C3%A7a_(Manaus).jpg",
+   "title": "File:Palácio da Justiça (Manaus).jpg"
+  },
+  {
+   "file": "stock/manaus-9.jpg",
+   "author": "Salles Neto",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:Igreja_de_S%C3%A3o_Sebasti%C3%A3o,_Manaus.jpg",
+   "title": "File:Igreja de São Sebastião, Manaus.jpg"
+  }
+ ],
+ "POLICIAL": [
+  {
+   "file": "stock/manaus-1.jpg",
+   "author": "Ana Claudia Jatahy - MTUR",
+   "license": "CC0",
+   "source": "https://commons.wikimedia.org/wiki/File:Journalist_Phelippe_Daou_Bridge.jpg",
+   "title": "File:Journalist Phelippe Daou Bridge.jpg"
+  },
+  {
+   "file": "stock/manaus-2.jpg",
+   "author": "Jalambert",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:Amazon_River_Rio_Negro_convergence.JPG",
+   "title": "File:Amazon River Rio Negro convergence.JPG"
+  },
+  {
+   "file": "stock/manaus-3.jpg",
+   "author": "MTur Destinos",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:AnaClaudiaJatahy_Econtro_das_%C3%81guas_Manaus_AM_(26279055397).jpg",
+   "title": "File:AnaClaudiaJatahy Econtro das Águas Manaus AM (26279055397).jpg"
+  },
+  {
+   "file": "stock/manaus-8.jpg",
+   "author": "Ana Claudia Jatahy - MTUR",
+   "license": "CC0",
+   "source": "https://commons.wikimedia.org/wiki/File:Pal%C3%A1cio_da_Justi%C3%A7a_(Manaus).jpg",
+   "title": "File:Palácio da Justiça (Manaus).jpg"
+  },
+  {
+   "file": "stock/manaus-9.jpg",
+   "author": "Salles Neto",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:Igreja_de_S%C3%A3o_Sebasti%C3%A3o,_Manaus.jpg",
+   "title": "File:Igreja de São Sebastião, Manaus.jpg"
+  }
+ ],
+ "SAÚDE": [
+  {
+   "file": "stock/manaus-1.jpg",
+   "author": "Ana Claudia Jatahy - MTUR",
+   "license": "CC0",
+   "source": "https://commons.wikimedia.org/wiki/File:Journalist_Phelippe_Daou_Bridge.jpg",
+   "title": "File:Journalist Phelippe Daou Bridge.jpg"
+  },
+  {
+   "file": "stock/manaus-2.jpg",
+   "author": "Jalambert",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:Amazon_River_Rio_Negro_convergence.JPG",
+   "title": "File:Amazon River Rio Negro convergence.JPG"
+  },
+  {
+   "file": "stock/manaus-3.jpg",
+   "author": "MTur Destinos",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:AnaClaudiaJatahy_Econtro_das_%C3%81guas_Manaus_AM_(26279055397).jpg",
+   "title": "File:AnaClaudiaJatahy Econtro das Águas Manaus AM (26279055397).jpg"
+  },
+  {
+   "file": "stock/manaus-8.jpg",
+   "author": "Ana Claudia Jatahy - MTUR",
+   "license": "CC0",
+   "source": "https://commons.wikimedia.org/wiki/File:Pal%C3%A1cio_da_Justi%C3%A7a_(Manaus).jpg",
+   "title": "File:Palácio da Justiça (Manaus).jpg"
+  },
+  {
+   "file": "stock/manaus-9.jpg",
+   "author": "Salles Neto",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:Igreja_de_S%C3%A3o_Sebasti%C3%A3o,_Manaus.jpg",
+   "title": "File:Igreja de São Sebastião, Manaus.jpg"
+  }
+ ],
+ "EDUCAÇÃO": [
+  {
+   "file": "stock/manaus-1.jpg",
+   "author": "Ana Claudia Jatahy - MTUR",
+   "license": "CC0",
+   "source": "https://commons.wikimedia.org/wiki/File:Journalist_Phelippe_Daou_Bridge.jpg",
+   "title": "File:Journalist Phelippe Daou Bridge.jpg"
+  },
+  {
+   "file": "stock/manaus-2.jpg",
+   "author": "Jalambert",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:Amazon_River_Rio_Negro_convergence.JPG",
+   "title": "File:Amazon River Rio Negro convergence.JPG"
+  },
+  {
+   "file": "stock/manaus-3.jpg",
+   "author": "MTur Destinos",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:AnaClaudiaJatahy_Econtro_das_%C3%81guas_Manaus_AM_(26279055397).jpg",
+   "title": "File:AnaClaudiaJatahy Econtro das Águas Manaus AM (26279055397).jpg"
+  },
+  {
+   "file": "stock/manaus-8.jpg",
+   "author": "Ana Claudia Jatahy - MTUR",
+   "license": "CC0",
+   "source": "https://commons.wikimedia.org/wiki/File:Pal%C3%A1cio_da_Justi%C3%A7a_(Manaus).jpg",
+   "title": "File:Palácio da Justiça (Manaus).jpg"
+  },
+  {
+   "file": "stock/manaus-9.jpg",
+   "author": "Salles Neto",
+   "license": "Public domain",
+   "source": "https://commons.wikimedia.org/wiki/File:Igreja_de_S%C3%A3o_Sebasti%C3%A3o,_Manaus.jpg",
+   "title": "File:Igreja de São Sebastião, Manaus.jpg"
+  }
+ ]
+}

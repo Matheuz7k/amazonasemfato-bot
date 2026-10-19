@@ -152,12 +152,21 @@ function titleWords(title) {
   );
 }
 
-export function sameStory(a, b) {
+function titleOverlap(a, b) {
   const wa = titleWords(a), wb = titleWords(b);
-  if (!wa.size || !wb.size) return false;
+  if (!wa.size || !wb.size) return 0;
   let overlap = 0;
   for (const w of wa) if (wb.has(w)) overlap++;
-  return overlap / Math.min(wa.size, wb.size) >= 0.6;
+  return overlap / Math.min(wa.size, wb.size);
+}
+
+export function sameStory(a, b) {
+  return titleOverlap(a, b) >= 0.6;
+}
+
+// Mesmo assunto (não necessariamente a mesma matéria): bom para 2ª foto
+export function relatedStory(a, b) {
+  return titleOverlap(a, b) >= 0.45;
 }
 
 // Espelho publicado pelo PC da equipe (tools/mirror_feeds.py): portais como o
@@ -269,6 +278,19 @@ export async function getNews() {
     if (c.image && !dup.image2 && !sameImage(c.image, dup.image)) {
       dup.image2 = c.image;
       dup.source2 = c.source;
+    }
+  }
+  // 2ª passada, mais permissiva (só para emprestar foto, não para fundir):
+  // matéria de outro portal sobre o mesmo assunto nas últimas 24h
+  for (const u of unique) {
+    if (u.image2) continue;
+    const rel = unique.find(
+      (o) => o !== u && o.source !== u.source && o.image &&
+        !sameImage(o.image, u.image) && relatedStory(u.title, o.title)
+    );
+    if (rel) {
+      u.image2 = rel.image;
+      u.source2 = rel.source;
     }
   }
   return unique;

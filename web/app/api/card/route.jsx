@@ -155,6 +155,48 @@ function loadFont(file) {
   return fs.readFileSync(path.join(process.cwd(), "assets", "fonts", file));
 }
 
+// Acervo de fotos ilustrativas por categoria (tools/build_stock.py), usado só
+// quando a matéria não tem uma 2ª foto diferente — sempre com crédito
+let STOCK = null;
+function loadStock() {
+  if (STOCK) return STOCK;
+  try {
+    STOCK = JSON.parse(
+      fs.readFileSync(path.join(process.cwd(), "public", "stock", "manifest.json"), "utf-8")
+    );
+  } catch {
+    STOCK = {};
+  }
+  return STOCK;
+}
+
+function hashString(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+// Escolhe uma foto do acervo da categoria (determinística pelo título, para a
+// mesma notícia sair sempre igual), pulando as que parecem com a 1ª foto
+async function stockPhoto(category, title, avoidData) {
+  const stock = loadStock();
+  const list = stock[category] ?? stock["MANAUS"] ?? [];
+  if (!list.length) return null;
+  const start = hashString(title) % list.length;
+  for (let i = 0; i < list.length; i++) {
+    const entry = list[(start + i) % list.length];
+    try {
+      const buf = fs.readFileSync(path.join(process.cwd(), "public", entry.file));
+      const data = `data:image/jpeg;base64,${buf.toString("base64")}`;
+      if (avoidData && (await looksSame(avoidData, data))) continue;
+      return { data, credit: `${entry.author} (${entry.license})` };
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
 function loadLogo() {
   const p = path.join(process.cwd(), "public", "logo.png");
   if (!fs.existsSync(p)) return null;
@@ -770,7 +812,8 @@ export async function GET(request) {
   // Estilo duo: 2ª foto DIFERENTE — do outro veículo que cobriu a mesma
   // notícia (img2) ou do corpo da própria matéria; só existe uma → desfocada
   let imgBottom = null;
-  let duoMode = "none"; // "two-sources" | "body" | "blur"
+  let stockCredit = "";
+  let duoMode = "none"; // "two-sources" | "body" | "stock" | "blur"
   if (style === "duo") {
     const seconds = [
       ...new Set([sp.get("img2"), ...(meta.bodyImages ?? [])].filter(Boolean)),
@@ -783,6 +826,20 @@ export async function GET(request) {
       duoMode = u === sp.get("img2") && sp.get("src2") ? "two-sources" : "body";
       break;
     }
+    // Nunca repetir a foto: sem 2ª foto real, entra uma ilustrativa do acervo
+    if (!imgBottom) {
+      const stock = await stockPhoto(cat, title, img);
+      if (stock) {
+        imgBottom = stock.data;
+        duoMode = "stock";
+        stockCredit = stock.credit;
+      }
+    }
+    if (!img && imgBottom) {
+      // matéria sem foto nenhuma: 1ª metade também do acervo (outra foto)
+      const other = await stockPhoto(cat, `${title}#2`, imgBottom);
+      if (other) img = other.data;
+    }
     if (!imgBottom && usedUrl) {
       imgBottom = await normalizeImage(usedUrl, link, { blur: true });
       duoMode = "blur";
@@ -790,8 +847,9 @@ export async function GET(request) {
   }
 
   const logo = loadLogo();
-  const sourceLabel =
-    duoMode === "two-sources" ? `${source} / ${sp.get("src2")}` : source;
+  let sourceLabel = source;
+  if (duoMode === "two-sources") sourceLabel = `${source} / ${sp.get("src2")}`;
+  if (duoMode === "stock") sourceLabel = `${source} · Foto 2 ilustrativa: ${stockCredit}`;
   const props = { title, source: sourceLabel, img, logo, cat, published };
 
   const card =

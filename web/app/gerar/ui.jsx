@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 const DUO_NOTES = {
   "two-sources": (src2) => `📸 Duas fotos reais: a de baixo é de ${src2}, que também cobriu esta notícia.`,
   body: () => "📸 Duas fotos reais, ambas da própria matéria.",
+  stock: () =>
+    "📸 A matéria só tem uma foto — a 2ª é ilustrativa, do acervo de Manaus/Amazonas (crédito no card).",
   blur: () =>
     "ℹ️ Só existe uma foto desta notícia — a metade de baixo usa a mesma foto desfocada. Experimente outro estilo.",
 };
