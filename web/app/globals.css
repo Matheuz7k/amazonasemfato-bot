@@ -207,7 +207,7 @@ a { color: inherit; text-decoration: none; }
 .preview-wrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 3 / 4;
   border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--border);

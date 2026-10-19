@@ -1,12 +1,48 @@
 import { ImageResponse } from "next/og";
 import fs from "node:fs";
 import path from "node:path";
+import sharp from "sharp";
 import { categoryEmoji, fetchOgImage } from "../../../lib/news";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
+// 1080x1440 (3:4) — padrão atual do feed/grade do Instagram
 const W = 1080;
-const H = 1350;
+const H = 1440;
+
+const UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+  "(KHTML, like Gecko) Chrome/130.0 Safari/537.36 amazonasemfato-bot";
+
+/**
+ * Baixa e normaliza QUALQUER imagem (WebP/AVIF/PNG/EXIF girado/URL instável)
+ * para JPEG em data-URI — o renderizador nunca recebe formato que não entende
+ * e nunca depende de rede no meio do desenho. Falhou? Retorna null e o card
+ * sai com o fundo padrão, nunca quebrado.
+ */
+async function normalizeImage(url) {
+  if (!url) return null;
+  try {
+    const resp = await fetch(url, {
+      headers: { "User-Agent": UA, Accept: "image/*,*/*;q=0.8" },
+      signal: AbortSignal.timeout(15000),
+      next: { revalidate: 3600 },
+    });
+    if (!resp.ok) return null;
+    const buf = Buffer.from(await resp.arrayBuffer());
+    if (buf.length < 5000) return null; // pixel de rastreio / placeholder
+    const out = await sharp(buf, { animated: false })
+      .rotate() // respeita orientação EXIF
+      .resize({ width: 1400, height: 1400, fit: "inside", withoutEnlargement: true })
+      .flatten({ background: "#111111" }) // PNG transparente → fundo sólido
+      .jpeg({ quality: 88, mozjpeg: true })
+      .toBuffer();
+    return `data:image/jpeg;base64,${out.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
 const MARGIN = 72;
 const RED = "#c61e22";
 // Cores reais do X em dark mode ("Lights out")
@@ -336,7 +372,7 @@ function TweetCard({ title, source, img, logo, published }) {
           <img
             src={img}
             width={cardW - 2 * pad}
-            height={540}
+            height={620}
             style={{
               marginTop: 32,
               borderRadius: 16,
@@ -529,14 +565,23 @@ function HeadlineCard({ title, source, img, logo, cat, published }) {
 
 export async function GET(request) {
   const sp = request.nextUrl.searchParams;
-  const title = sp.get("title") ?? "";
+  let title = (sp.get("title") ?? "").trim();
   const source = sp.get("source") ?? "";
   const published = sp.get("published") ?? new Date().toISOString();
   const cat = sp.get("cat") ?? "";
   const style = sp.get("style") ?? "tweet";
   const link = sp.get("link");
-  // og:image é a foto editorial em alta resolução — preferir sempre que houver
-  const img = (link ? await fetchOgImage(link) : null) ?? sp.get("img");
+
+  // Título gigante não pode engolir a área da foto
+  if (title.length > 200) {
+    title = title.slice(0, 197).replace(/\s+\S*$/, "") + "…";
+  }
+
+  // og:image é a foto editorial em alta — preferir; se falhar, cai para a do feed.
+  // Tudo passa pelo normalizador (WebP/AVIF/EXIF → JPEG inline, à prova de bug).
+  const ogUrl = link ? await fetchOgImage(link) : null;
+  const img =
+    (await normalizeImage(ogUrl)) ?? (await normalizeImage(sp.get("img")));
 
   const logo = loadLogo();
   const props = { title, source, img, logo, cat, published };

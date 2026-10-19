@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from . import config
 
-W, H = 1080, 1350
+W, H = 1080, 1440  # 3:4, padrão atual do feed/grade do Instagram
 MARGIN = 72
 RED = (198, 30, 34)
 WHITE = (255, 255, 255)
