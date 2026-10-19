@@ -112,6 +112,8 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 0 4px 14px rgba(198, 30, 34, 0.35);
 }
 
+.chip.disabled { opacity: 0.45; cursor: not-allowed; }
+
 /* ── Lista de notícias ──────────────────── */
 .item {
   display: flex;

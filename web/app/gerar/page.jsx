@@ -24,12 +24,15 @@ export default async function Gerar({ searchParams }) {
   }
 
   const caption = buildCaption({ title, summary, source, category: cat });
-  const meta = link ? await fetchOgMeta(link) : { video: null };
+  const meta = link ? await fetchOgMeta(link) : { video: null, bodyImages: [] };
+  // "2 fotos" só é oferecido quando existe uma 2ª foto real (outro portal ou
+  // corpo da matéria); a checagem final de "foto diferente" é feita no card
+  const hasSecondPhoto = Boolean(img2) || (meta.bodyImages ?? []).length > 0;
   const cardParams = new URLSearchParams({
     title,
     source,
     style,
-    v: "8", // versão do renderizador — muda a chave de cache da CDN
+    v: "9", // versão do renderizador — muda a chave de cache da CDN
     published: published ?? new Date().toISOString(),
     ...(cat ? { cat } : {}),
     ...(img ? { img } : {}),
@@ -56,16 +59,22 @@ export default async function Gerar({ searchParams }) {
       <Link className="back" href="/">← voltar para a lista</Link>
 
       <div className="styles">
-        {STYLES.map(([key, label]) => (
-          <Link
-            key={key}
-            className={`chip ${style === key ? "active" : ""}`}
-            href={styleLink(key)}
-            replace
-          >
-            {label}
-          </Link>
-        ))}
+        {STYLES.map(([key, label]) =>
+          key === "duo" && !hasSecondPhoto ? (
+            <span key={key} className="chip disabled" title="Esta notícia só tem uma foto real">
+              {label} · só 1 foto
+            </span>
+          ) : (
+            <Link
+              key={key}
+              className={`chip ${style === key ? "active" : ""}`}
+              href={styleLink(key)}
+              replace
+            >
+              {label}
+            </Link>
+          )
+        )}
       </div>
 
       <CardPanel

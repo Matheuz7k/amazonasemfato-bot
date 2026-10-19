@@ -5,10 +5,8 @@ import { useEffect, useRef, useState } from "react";
 const DUO_NOTES = {
   "two-sources": (src2) => `📸 Duas fotos reais: a de baixo é de ${src2}, que também cobriu esta notícia.`,
   body: () => "📸 Duas fotos reais, ambas da própria matéria.",
-  stock: () =>
-    "📸 A matéria só tem uma foto — a 2ª é ilustrativa, do acervo de Manaus/Amazonas (crédito no card).",
-  blur: () =>
-    "ℹ️ Só existe uma foto desta notícia — a metade de baixo usa a mesma foto desfocada. Experimente outro estilo.",
+  none: () =>
+    "ℹ️ Esta notícia só tem uma foto real — por isso o card saiu no formato de 1 foto. Nunca repetimos nem inventamos foto.",
 };
 
 export default function CardPanel({ cardUrl, caption: baseCaption, prefetch = [], style, src2 }) {
@@ -35,14 +33,6 @@ export default function CardPanel({ cardUrl, caption: baseCaption, prefetch = []
         if (style === "duo") {
           const mode = resp.headers.get("x-duo");
           if (DUO_NOTES[mode]) setNote(DUO_NOTES[mode](src2));
-          // foto do acervo com licença de atribuição: crédito vai na legenda
-          const credit = resp.headers.get("x-stock-credit");
-          if (credit) {
-            const text = decodeURIComponent(credit);
-            if (!/cc0|public domain|domínio público/i.test(text)) {
-              setCaption(`${baseCaption}\n\n📷 Foto ilustrativa: ${text}`);
-            }
-          }
         } else if (resp.headers.get("x-has-photo") === "0") {
           setNote("ℹ️ Esta matéria não tem foto disponível — o card saiu com o fundo da marca.");
         }
