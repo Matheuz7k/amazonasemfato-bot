@@ -110,15 +110,22 @@ def fetch_candidates(posted: dict) -> list:
     cutoff = datetime.now(timezone.utc) - timedelta(hours=config.MAX_AGE_HOURS)
     candidates = []
     for feed in config.FEEDS:
-        try:
-            resp = requests.get(
-                feed["url"], timeout=30,
-                headers={"User-Agent": config.USER_AGENT},
-            )
-            resp.raise_for_status()
-            parsed = feedparser.parse(resp.content)
-        except Exception as exc:  # feed fora do ar não derruba a execução
-            print(f"[aviso] feed {feed['name']} falhou: {exc}")
+        parsed = None
+        for url in (feed["url"], f"{config.MIRROR_BASE}{_slugify(feed['name'])}.xml"):
+            try:
+                resp = requests.get(
+                    url, timeout=30, headers={"User-Agent": config.USER_AGENT},
+                )
+                resp.raise_for_status()
+                candidate = feedparser.parse(resp.content)
+                if candidate.entries:
+                    parsed = candidate
+                    break
+            except Exception as exc:
+                if url == feed["url"]:
+                    print(f"[aviso] feed {feed['name']} falhou ({exc}); tentando espelho")
+        if parsed is None:  # feed fora do ar não derruba a execução
+            print(f"[aviso] feed {feed['name']} indisponível (direto e espelho)")
             continue
 
         for entry in parsed.entries[:20]:

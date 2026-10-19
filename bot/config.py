@@ -23,6 +23,10 @@ FEEDS = [
     {"name": "A Crítica", "url": "https://www.acritica.com/rss", "filter_local": True},
 ]
 
+# Espelho dos feeds publicado pelo PC da equipe (tools/mirror_feeds.py) —
+# portais como o D24AM bloqueiam IPs de datacenter (GitHub Actions inclusive)
+MIRROR_BASE = "https://raw.githubusercontent.com/Matheuz7k/amazonasemfato-bot/mirror/"
+
 # Termos que caracterizam notícia local (estado, capital e municípios do interior)
 LOCAL_TERMS = [
     "amazonas", "manaus", "amazônia", "interior do am", " am)", "(am",

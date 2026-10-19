@@ -148,16 +148,34 @@ export function sameStory(a, b) {
   return overlap / Math.min(wa.size, wb.size) >= 0.6;
 }
 
-async function fetchFeed(feed) {
-  const resp = await fetch(feed.url, {
-    headers: { "User-Agent": UA },
+// Espelho publicado pelo PC da equipe (tools/mirror_feeds.py): portais como o
+// D24AM bloqueiam qualquer IP de datacenter, inclusive o da Vercel
+const MIRROR_BASE = "https://raw.githubusercontent.com/Matheuz7k/amazonasemfato-bot/mirror/";
+
+async function fetchFeedXml(url) {
+  const resp = await fetch(url, {
+    headers: { "User-Agent": UA, Accept: "application/rss+xml,application/xml,text/xml,*/*" },
+    signal: AbortSignal.timeout(10000),
     next: { revalidate: 300 },
   });
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
   const xml = await resp.text();
-  const parser = new XMLParser({ ignoreAttributes: false });
-  const doc = parser.parse(xml);
-  return asArray(doc?.rss?.channel?.item);
+  const doc = new XMLParser({ ignoreAttributes: false }).parse(xml);
+  const items = asArray(doc?.rss?.channel?.item);
+  if (!items.length) throw new Error("sem itens (bloqueio/challenge?)");
+  return items;
+}
+
+async function fetchFeed(feed) {
+  try {
+    return await fetchFeedXml(feed.url);
+  } catch (direct) {
+    try {
+      return await fetchFeedXml(`${MIRROR_BASE}${slugify(feed.name)}.xml`);
+    } catch {
+      throw direct;
+    }
+  }
 }
 
 export async function getNews() {
